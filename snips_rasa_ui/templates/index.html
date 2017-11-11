@@ -1,0 +1,121 @@
+<!doctype html>
+
+<html class="no-js" lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, target-densitydpi=device-dpi" />
+		<link rel="stylesheet" href="res/foundation.min.css">
+		<link rel="stylesheet" href="res/foundation-icons/foundation-icons.css" />
+
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="res/foundation.min.css">
+		<link rel="stylesheet" href="res/style.css" >
+		<script src="res/jquery.js"></script>
+		<script src="res/foundation.min.js"></script>
+		<style>[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none !important;
+}</style>
+
+	</head>
+	
+	<body  >
+<div class="content contentwrapper"  >
+		
+	<div ng-app="rasaUIApp" ng-cloak>
+		<div class="container" ng-controller="MainCtrl"   >
+
+		<microphone host="localhost" port="9001" ></microphone>
+
+		<ul class="tabs" data-tabs id="example-tabs">
+		  <li class="tabs-title is-active"><a href="#panel1" aria-selected="true">Stories</a></li>
+		  <li class="tabs-title"><a data-tabs-target="panel2" href="#panel2">Log</a></li>
+		</ul>
+
+		<div class="tabs-content" data-tabs-content="example-tabs">
+		  <div class="tabs-panel is-active" id="panel1">
+            <input type='button' ng-click='update()' value='Save' class='float-right button' />
+            <input type='button' ng-click='save()' value='Update' class='float-right button' />
+            <textarea ng-model="storyText" rows='20' cols='60' ></textarea>
+			<div><h3>Stories</h3>
+                <div ng-repeat="(title,story) in stories" >
+                    <h4>{{title}}</h4>
+                    <div ng-repeat="intent in story.intents" >
+                        Eg. <span ng-repeat="example in intent.examples" >{{example}},</span>
+                        <div ng-repeat="action in intent.actions" >
+                            - {{action}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div><h3>Slots</h3>
+						<div ng-repeat="(title,slot) in slots" >
+							<h4>{{title}}</h4>
+							{{slot}}
+						</div>
+					</div>
+					<div><h3>Intents</h3>
+						<div ng-repeat="(title,slot) in intents" >
+							<h4>{{title}}</h4>
+							{{slot}}
+						</div>
+					</div>
+					<div><h3>Actions</h3>
+						<div ng-repeat="(title,action) in actions" >
+							<h4>{{title}}</h4>
+							{{action}}
+						</div>
+					</div>
+		  </div>
+		  <div class="tabs-panel" id="panel2">
+					<div><h3>Log</h3>
+						<div ng-repeat="log in logEntries" >
+							<div>{{log}}</div>
+						</div>
+					</div>
+					
+
+		  </div>
+		</div>
+
+			<!--form>
+				<label>Story <input type='text' ng-model='story.title' ></label>
+				<label>Steps <input type='button' ng-click='' value="+" ></label>
+				<ul class='storysteps' >
+					<li>
+						<label>Intent <input type='text' ng-model='story.title' ></label>
+						<label>Slots <input type='button' ng-click='' value="+" ></label>
+						<ul class='slots' >
+							<li>
+								<label><input type='text' ng-model='story.title' ></label>
+							</li>
+						</ul>
+						
+						<label>Examples <input type='button' ng-click='' value="+" ></label>
+						<ul class='examples' >
+							<li>
+								<label><input type='text' ng-model='example' ></label>
+							</li>
+						</ul>
+						<label>Actions <input type='button' ng-click='' value="+" ></label>
+						<ul class='actions' >
+							<li>
+								<label><input type='text' ng-model='example' ></label>
+							</li>
+						</ul>
+						
+				
+					</li>
+				</ul>
+			</form-->
+		</div>
+	</div>
+	<script src="res/paho-mqtt.js"></script>
+	<script src="res/angular-1.6.6.min.js"></script>
+	<script src="res/app.js"></script>
+	<script src="res/angular.snips.js"></script>
+ 
+</div>
+ddd
+</body>
+</html>

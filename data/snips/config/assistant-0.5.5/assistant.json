@@ -1,0 +1,201 @@
+{
+    "name": "Basic skills",
+    "intents": [
+        {
+            "id": "user_Kr5A7b4OD__AddAlarm",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [
+                {
+                    "id": "slot_rJ4T-w35W",
+                    "name": "alarmDuration",
+                    "entityId": "time.duration",
+                    "missingQuestion": "How long before the alarm?",
+                    "required": false,
+                    "entity": "snips/duration"
+                },
+                {
+                    "id": "slot_S1OeGwn5-",
+                    "name": "alarmDescription",
+                    "entityId": "snips/default",
+                    "missingQuestion": "",
+                    "required": false,
+                    "entity": "snips/default--alarmDescription"
+                },
+                {
+                    "id": "slot_Hk_uiwn9-",
+                    "name": "alarmTime",
+                    "entityId": "time.datetime",
+                    "missingQuestion": "",
+                    "required": false,
+                    "entity": "snips/datetime"
+                }
+            ],
+            "name": "AddAlarm",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__CancelAllAlarms",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [],
+            "name": "CancelAllAlarms",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__CancelAlarm",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [
+                {
+                    "id": "slot_SyagtD29W",
+                    "name": "alarmTime",
+                    "entityId": "time.datetime",
+                    "missingQuestion": "",
+                    "required": false,
+                    "entity": "snips/datetime"
+                },
+                {
+                    "id": "slot_H12btw35Z",
+                    "name": "alarmDescription",
+                    "entityId": "snips/default",
+                    "missingQuestion": "",
+                    "required": false,
+                    "entity": "snips/default--alarmDescription"
+                }
+            ],
+            "name": "CancelAlarm",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__WhatIsTheTime",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [],
+            "name": "WhatIsTheTime",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__ListAlarms",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [],
+            "name": "ListAlarms",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__SpellWord",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [
+                {
+                    "id": "slot_SJJ7p4p9W",
+                    "name": "wordToSpell",
+                    "entityId": "snips/default",
+                    "missingQuestion": "what word do you want to spell?",
+                    "required": true,
+                    "entity": "snips/default--wordToSpell"
+                }
+            ],
+            "name": "SpellWord",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__UsbPowerOnPort",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [
+                {
+                    "id": "slot_HkIi64TqZ",
+                    "name": "usbPortIdentifier",
+                    "entityId": "snips/default",
+                    "missingQuestion": "what do you want to turn on?",
+                    "required": true,
+                    "entity": "snips/default--usbPortIdentifier"
+                }
+            ],
+            "name": "UsbPowerOnPort",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__UsbPowerOffPort",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [
+                {
+                    "id": "slot_Hk9PREaqb",
+                    "name": "usbPortIdentifier",
+                    "entityId": "snips/default",
+                    "missingQuestion": "what do you want to turn off ?",
+                    "required": true,
+                    "entity": "snips/default--usbPortIdentifier"
+                }
+            ],
+            "name": "UsbPowerOffPort",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        },
+        {
+            "id": "user_Kr5A7b4OD__BasicMaths",
+            "type": "registry",
+            "version": "latest",
+            "language": "en",
+            "slots": [
+                {
+                    "id": "slot_SyaXkSTcb",
+                    "name": "numberA",
+                    "entityId": "numbers.number",
+                    "missingQuestion": "",
+                    "required": false,
+                    "entity": "snips/number"
+                },
+                {
+                    "id": "slot_B1NNyB65W",
+                    "name": "numberB",
+                    "entityId": "numbers.number",
+                    "missingQuestion": "",
+                    "required": false,
+                    "entity": "snips/number"
+                },
+                {
+                    "id": "slot_SJggyxB69-",
+                    "name": "mathsOperator",
+                    "entityId": "entity_ZgmnxOWo3",
+                    "missingQuestion": "",
+                    "required": false,
+                    "entity": "mathsOperator"
+                }
+            ],
+            "name": "BasicMaths",
+            "confirmationRequired": false,
+            "confirmationQuestion": ""
+        }
+    ],
+    "createdAt": "2017-09-18T12:29:48.186Z",
+    "language": "en",
+    "nluEngine": {
+        "version": "0.9.0"
+    },
+    "platform": {
+        "type": "rasberrypi"
+    },
+    "asr": {
+        "type": "snips"
+    },
+    "analyticsEnabled": true
+}

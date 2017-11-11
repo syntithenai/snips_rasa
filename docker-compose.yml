@@ -1,0 +1,77 @@
+version: '2'
+
+services:
+
+    mosquitto:
+        # see docker-compose/manifest.yml
+        image: syntithenai/mosquitto
+        ports:
+            - 1883:1883
+            - 9001:9001 
+        volumes:
+            - ./docker-compose/mosquitto/data:/mqtt/data
+            - ./docker-compose/mosquitto/logs:/mqtt/logs
+        restart: always
+        
+    rasa_nlu:
+        image: rasa/rasa_nlu:latest-full
+        ports:
+            - 5000:5000
+    
+
+#    snips-0.5.5:
+#        image: snipsdocker/platform:0.5.5
+#        privileged: true
+##        tty: true
+#        command: --exclude-components snips-queries -mqqt mosquitto:1883
+#        restart: always
+#        volumes:
+#            - /root/.asoundrc:/root/.asoundrc
+#            - /dev/snd:/dev/snd
+#            - ./data/snips/config/assistant-0.5.5:/opt/snips/config/assistant
+
+    snips:
+        image: snipsdocker/platform:latest
+        privileged: true
+        tty: true
+        command: --exclude-components snips-queries -mqqt mosquitto:1883
+        restart: always
+        volumes:
+            - /root/.asoundrc:/root/.asoundrc
+            - /dev/snd:/dev/snd
+            - ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+            - ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+            - ./data/snips/config/assistant:/usr/share/snips/assistant
+            - ./docker-compose/snips.toml:/etc/snips.toml
+            - ./docker-compose/snips.ini:/root/resources/snips.ini
+     
+#    rasa:
+#        image: syntithenai/snips_rasa:latest
+#        command: /opt/snips/snips-entrypoint.sh 
+#        restart: always
+#        volumes:
+#            - /root/.asoundrc:/root/.asoundrc
+#            - /dev/snd:/dev/snd
+#            - ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+#            - ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+#            - ./data/snips/config:/usr/share/snips/config
+#            - ./data:/opt/rasa/data
+#            - ./docker-compose/entrypoint.sh:/opt/snips/snips-entrypoint.sh
+#            - ./docker-compose/supervisor-rasa.conf:/etc/supervisor/conf.d/supervisord.conf
+            
+#    rasa_ui:
+#        image: syntithenai/snips_rasa
+#        command: /opt/snips/snips-entrypoint.sh 
+#        restart: always
+#        volumes:
+#            - /root/.asoundrc:/root/.asoundrc
+#            - /dev/snd:/dev/snd
+#            - ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+#            - ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+#            - ./data/snips/config:/usr/share/snips/config
+#            - ./data:/opt/rasa/data
+#            - ./docker-compose/entrypoint.sh:/opt/snips/snips-entrypoint.sh
+#            - ./docker-compose/supervisor-rasaui.conf:/etc/supervisor/conf.d/supervisord.conf
+#        ports:
+#            - 80:4000
+

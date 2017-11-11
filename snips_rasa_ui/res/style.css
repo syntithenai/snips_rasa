@@ -1,0 +1,44 @@
+.container ul {list-style: none}
+#voicerecognitionbutton {
+  position: relative;
+  font-weight: bold;
+  font-size: 2em;
+  border-radius: 33px;
+  padding: 0.4em;
+  padding-left: 0.7em;
+  padding-right: 0.7em;
+  margin-top: 0px ;
+  color: black;
+  border: 2px solid black;
+}
+#voicerecognitionbutton.status-0 {
+  background-color: pink;
+    border: 2px solid red;
+}
+#voicerecognitionbutton.status-2 {
+	background-color: lightgreen;
+	  border: 2px solid green;
+}
+#voicerecognitionbutton.status-1 {
+	background-color: orange;
+	  border: 2px solid red;
+}
+.speech-bubble {
+	position: relative;
+	background: #00aabb;
+	border-radius: .4em;
+}
+
+.speech-bubble:after {
+	content: '';
+	position: absolute;
+	right: 0;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 1.125em solid transparent;
+	border-left-color: #00aabb;
+	border-right: 0;
+	margin-top: -1.125em;
+	margin-right: -1.125em;
+}

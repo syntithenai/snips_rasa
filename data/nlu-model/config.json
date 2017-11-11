@@ -1,0 +1,5 @@
+{
+  "pipeline": "spacy_sklearn",
+  "path" : "/opt/rasa/data/nlu-model",
+  "data" : "/opt/rasa/data/nlu-model/musicplayer.rasa.md"
+}
