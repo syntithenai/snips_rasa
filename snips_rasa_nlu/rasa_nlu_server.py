@@ -3,6 +3,7 @@
 
 import json
 import time
+import os
 
 from socket import error as socket_error
 
@@ -140,5 +141,5 @@ class RasaNLUServer():
 
 
 
-server = RasaNLUServer('mosquitto', 1883,'/opt/rasa/data/nlu-model/default/model','/opt/rasa/data/nlu-model/config.json')
+server = RasaNLUServer(os.environ['MQTT_HOST'], os.environ['MQTT_PORT'],os.environ['NLU_MODEL_FOLDER'],os.environ['NLU_CONFIG_FILE'])
 server.start()

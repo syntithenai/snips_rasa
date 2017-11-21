@@ -41,5 +41,36 @@ RUN /opt/rasa/anaconda/bin/pip install -U Flask ; echo "done"
 #COPY ./snips-entrypoint.sh /opt/snips/snips-entrypoint.sh
 #ENV USE_RASA_NLU 1
 
+# SNOWBOY / RECENT SWIG * using python2 rather than anaconda python3
+RUN apt-get install  -fyq  --force-yes  wget swig3.0 python-pyaudio python3-pyaudio sox libatlas-base-dev libpcre3-dev python-pip git python-dev portaudio19-dev psutils pulseaudio
+RUN pip install pyaudio
+#apt-get install libportaudio2 libportaudiocpp0 python-pyaudio python-dev
+
+# download swig 3.0.12
+RUN wget -O /tmp/swig-3.0.12.tar.gz https://downloads.sourceforge.net/project/swig/swig/swig-3.0.12/swig-3.0.12.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fswig%2Ffiles%2Fswig%2Fswig-3.0.12%2Fswig-3.0.12.tar.gz%2Fdownload
+
+# extract and configure
+RUN cd /opt; tar xf /tmp/swig-3.0.12.tar.gz; cd swig-3.0.12;  ./configure --prefix=/usr ;  make -j 4; make install; cp swig /usr/local/bin
+
+# snowboy
+RUN cd /opt; git clone https://github.com/Kitt-AI/snowboy.git; cd snowboy; python setup.py install;  cd swig/Python; make; 
+#cp snowboydetect.py /opt/rasa/anaconda/lib/python2.7/ ; 
+RUN  cd /opt/snowboy ; /opt/rasa/anaconda/bin/python setup.py install;
+#RUN cp _snowboydetect.so /opt/rasa/anaconda/lib/
+RUN p /opt/snowboy/swig/Python/* /opt/snips_hotword_snowboy/
+
+#ENV PULSE_SERVER=192.168.1.100
+
+#RUN touch /tmp/pulse-socket; chmod 777 /tmp/pulse-socket
+
+#RUN addgroup --system --group pulse && \
+#    adduser --system --group pulse && \
+#    addgroup pulse audio && \
+#    mkdir /tmp/pulse && \
+#    chown -R pulse:pulse /home/pulse /tmp/pulse
+ 
+RUN mkdir -p /var/run/pulse; chmod 777 /var/run/pulse
+    
+#COPY ./asound.conf /etc/asound.conf
 
 CMD ["/opt/snips/snips-entrypoint.sh"]

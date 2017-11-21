@@ -1,0 +1,258 @@
+version: '2'
+
+services:
+ #  TODO add priv, volumes etc ... docker run -it --entrypoint /bin/bash syntithenai/snips_rasa
+
+    # pulse audio running in same container as snips/rasa/..
+    #pulseaudiome:
+        #image: syntithenai/snips_rasa
+        #privileged: true
+        ##devices: ['/dev/snd']
+        #working_dir: /tmp
+        ##entrypoint: ['/bin/sh']
+        #entrypoint: ['/usr/bin/pulseaudio']
+        ##command: /usr/local/bin/pulseaudio
+        #user: pulse
+        #command: []
+        ##command: ['./start.sh']
+        #volumes:
+            #- /dev/snd:/dev/snd
+            #- /var/run/dbus:/var/run/dbus
+            #- /home/stever/.config/pulse:/home/pulse/.config/pulse
+    
+    # KEEP
+    #pulseaudio:
+        #image: pulseaudio   
+        #devices : ['/dev/snd']
+        #volumes: 
+            ##- "/home/stever/.config/pulse/cookie:/home/pulse/.config/pulse/cookie'
+            #- "/tmp/pulse"
+            #- "/usr/local/etc/pulse"
+        
+
+    snowboy:
+        image: syntithenai/snips_rasa:latest
+  #      depends_on: 
+  #          - snips
+        #privileged: true
+        extra_hosts: ['host:192.168.1.100']
+        #tty: true
+        #devices: ['/dev/snd']
+        #command: --exclude-components snips-hotword --exclude-components  snips-queries -mqqt mosquitto:1883
+        working_dir: /opt/snips_hotword_snowboy
+        # '/opt/rasa/anaconda/bin/python'
+        #entrypoint: ['/opt/snips_hotword_snowboy/server.py']
+        entrypoint: ['/opt/snips_hotword_snowboy/start.sh']
+        #command: ['sleep','3600']
+        command: ['']
+        restart: always
+        #volumes_from: 
+        #    - pulseaudio
+        volumes:
+            # access to pulse container via shared socket
+            #- ./docker-compose/pulse-client.conf:/etc/pulse/client.conf
+           
+            - /tmp/snowboylog:/tmp/snowboylog
+            #- "/tmp/pulse:/tmp/pulse"
+            #- pulseaudio:/usr/local/etc/pulse/client.conf:/etc/pulse/client.conf
+            - ./snips_hotword_snowboy:/opt/snips_hotword_snowboy
+            - ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
+            # use pulseaudio
+            #- ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+            #- ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+            #- ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
+            #- ./docker-compose/snips/snips.toml:/etc/snips.toml
+            #- ./docker-compose/snips/snips.ini:/root/resources/snips.ini
+            #- /tmp/pulse-socket:/tmp/pulse-socket
+            #- ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
+            - /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
+        environment:
+            - PULSE_SERVER=192.168.1.100
+            - MQTT_HOST=mosquitto
+            - MQTT_PORT=1883
+            - HOTWORD_MODEL=/opt/snowboy/resources/snowboy.umdl
+            - SITE_ID=default
+            - HOTWORD_ID=snowboy
+        
+
+        #read_only: true
+        #hostname: localhost
+        #ports:
+          #- "4713:4713"
+        #devices:
+          #- /dev/snd
+        #volumes:
+          #- /tmp/.X11-unix:/tmp/.X11-unix
+          #- /var/run/dbus:/var/run/dbus
+        #environment:
+          #DISPLAY: unix$DISPLAY
+        #security_opt:
+          #- seccomp:unconfined
+
+    #snips:
+        ##depends_on: ['snowboy','mosquitto']
+        #devices: ['/dev/snd']
+        #image: snipsdocker/platform:x86-latest
+        ##privileged: true
+        ##tty: true
+        ##
+        #command: --exclude-components snips-hotword --exclude-components  snips-queries -mqqt mosquitto:1883
+        ##["--exclude-components snips-queries snips-hotword","-mqqt mosquitto:1883"]
+        #restart: always
+        #volumes:
+        ##    - /dev/snd:/dev/snd
+            ## configure alsa for pulseaudio and link pulse cookie
+            ##- ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
+            ##export USER_ID=id -u $LOGNAME
+            ##export PULSE_SERVER="unix:/run/user/"$USER_ID"/pulse/native"
+            #- /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
+            ## packages
+            #- ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+            #- ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+            ## snips config
+            #- ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
+            #- ./docker-compose/snips/snips.toml:/etc/snips.toml
+            #- ./docker-compose/snips/snips.ini:/root/resources/snips.ini
+    #snowboy:
+        #image: syntithenai/snips_rasa:latest
+  ##      depends_on: 
+  ##          - snips
+        #privileged: true
+        ##extra_hosts: ['host:192.168.1.1']
+        ##tty: true
+        #devices: ['/dev/snd']
+        ##command: --exclude-components snips-hotword --exclude-components  snips-queries -mqqt mosquitto:1883
+        #working_dir: /opt/snips_hotword_snowboy
+        #entrypoint: /bin/sh
+        ##command: ['sleep','3600']
+        #command: ['./start.sh']
+        #restart: always
+        
+        #volumes:
+            ##- /dev/snd:/dev/snd
+            #- ./snips_hotword_snowboy:/opt/snips_hotword_snowboy
+            ##- ./snips_hotword_snowboy/asound-rate.conf:/etc/asound.conf
+            ## use pulseaudio
+            #- ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+            #- ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+            #- ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
+            #- ./docker-compose/snips/snips.toml:/etc/snips.toml
+            #- ./docker-compose/snips/snips.ini:/root/resources/snips.ini
+            ##- /tmp/pulse-socket:/tmp/pulse-socket
+            ##- ./docker-compose/pulse-client.conf:/etc/pulse/client.conf
+            ##- ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
+            #- /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
+        #environment:
+            ##- PULSE_SERVER=tcp:pulseaudio:4713
+            #- MQTT_HOST=mosquitto
+            #- MQTT_PORT=1883
+            #- HOTWORD_MODEL=/opt/snowboy/resources/snowboy.umdl
+            #- SITE_ID=default
+            #- HOTWORD_ID=snowboy
+            
+    #rasa_nlu:
+        #image: syntithenai/snips_rasa:latest
+        #privileged: true
+        #tty: true
+        #working_dir: /opt/rasa/snips_rasa_nlu
+        #environment:
+            #- NLU_TRAINING_FILE=/app/stories.md
+            #- NLU_CONFIG_FILE=/app/config.json
+            #- MQTT_HOST=mosquitto
+            #- MQTT_PORT=1883
+            ##- NLU_MODEL_FOLDER=/app/projects/default/model_20171112-112834
+        #command : ['/opt/rasa/anaconda/bin/python','/opt/rasa/snips_rasa_nlu/rasa-nlu_server.py']
+        #restart: always
+        #entrypoint: /usr/bin/python /snowboy/examples/Python/demo.py /snowboy/resources/snowboy.umdl
+        #volumes:
+            #- ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+            #- ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
+            #- ./data:/opt/rasa/data
+                #- ./docker-compose/supervisor-rasa.conf:/etc/supervisor/conf.d/supervisord.conf
+
+    mosquitto:
+        # see docker-compose/manifest.yml
+        image: syntithenai/mosquitto
+        ports:
+            - 1883:1883
+            - 9001:9001 
+        volumes:
+            - ./data/mosquitto/data:/mqtt/data
+            - ./data/mosquitto/logs:/mqtt/logs
+        restart: always
+        
+#    rasa_nlu:
+#        image: rasa/rasa_nlu:latest-full
+#        ports:
+#            - 5000:5000
+#        volumes:
+#            - ./data/rasa/projects:/app/projects
+#            - ./data/rasa/logs:/app/logs
+#            - ./docker-compose/rasa/config.json:/app/config.json
+#            - ./rasa_nlu:/app/rasa_nlu
+#            - ./snips_rasa_nlu:/app/snips_rasa_nlu
+#            # insert training model here
+#            - ./rasa_musicplayer/nlu/musicplayer.rasa.md:/app/training_data.md
+#            # pretrained
+#            #- ./rasa_musicplayer/nlu/model:/app/projects/meekamusic
+            
+    
+# 
+#    snips-0.5.5:
+#        image: snipsdocker/platform:0.5.5
+#        privileged: true
+#        tty: true
+#        command: --exclude-components snips-queries -mqqt mosquitto:1883
+#        restart: always
+#        volumes:
+#            - /root/.asoundrc:/root/.asoundrc
+#            - /dev/snd:/dev/snd
+#            - ./data/snips/config/assistant-0.5.5:/opt/snips/config/assistant
+
+
+
+
+#    snips-0.5.5:
+#        image: snipsdocker/platform:0.5.5
+#        privileged: true
+##        tty: true
+#        command: --exclude-components snips-queries -mqqt mosquitto:1883
+#        restart: always
+#        volumes:
+#            - /root/.asoundrc:/root/.asoundrc
+#            - /dev/snd:/dev/snd
+#            - ./data/snips/config/assistant-0.5.5:/opt/snips/config/assistant
+
+#    jessie:
+#        image: debian:jessie
+   
+#    rasa:
+#        image: syntithenai/snips_rasa:latest
+#        command: /opt/snips/snips-entrypoint.sh 
+#        restart: always
+#        volumes:
+#            - /root/.asoundrc:/root/.asoundrc
+#            - /dev/snd:/dev/snd
+#            - ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+#            - ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+#            - ./data/snips/config:/usr/share/snips/config
+#            - ./data:/opt/rasa/data
+#            - ./docker-compose/entrypoint.sh:/opt/snips/snips-entrypoint.sh
+#            - ./docker-compose/supervisor-rasa.conf:/etc/supervisor/conf.d/supervisord.conf
+            
+#    rasa_ui:
+#        image: syntithenai/snips_rasa
+#        command: /opt/snips/snips-entrypoint.sh 
+#        restart: always
+#        volumes:
+#            - /root/.asoundrc:/root/.asoundrc
+#            - /dev/snd:/dev/snd
+#            - ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+#            - ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+#            - ./data/snips/config:/usr/share/snips/config
+#            - ./data:/opt/rasa/data
+#            - ./docker-compose/entrypoint.sh:/opt/snips/snips-entrypoint.sh
+#            - ./docker-compose/supervisor-rasaui.conf:/etc/supervisor/conf.d/supervisord.conf
+#        ports:
+#            - 80:4000
+
