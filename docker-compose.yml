@@ -45,6 +45,7 @@ services:
         environment:
             - PULSE_SERVER=192.168.1.100
         volumes:
+            - /home/stever/projects/snips-asr-model-en-500MB/snips-asr-model-en-500MB:/usr/share/snips/assistant/custom_asr
         #    - /dev/snd:/dev/snd
             # configure alsa for pulseaudio and link pulse cookie
             #- ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf

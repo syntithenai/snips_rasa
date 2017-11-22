@@ -163,8 +163,8 @@ class SnowboyHotwordServer():
             elif msg.topic.endswith('toggleOn'):
                 self.hotword_on()
                 
-    def hotword_off(self):
-        self.log('hotword off')
+    def hotword_on(self):
+        self.log('hotword on')
         self.active = True
         #self.detector = snowboydecoder.ThreadedDetector(self.model, sensitivity=0.5)
         # snowboydecoder.ding_callback()
@@ -184,8 +184,8 @@ class SnowboyHotwordServer():
         self.detector.start_recog(detected_callback=self.send_detected,sleep_time=0.03)
         self.log('hotword started')
         
-    def hotword_on(self):
-        self.log('hotword on')
+    def hotword_off(self):
+        self.log('hotword off')
         self.active = True
         #self.interrupted = True;
         #if self.detector is not None:
@@ -203,8 +203,8 @@ class SnowboyHotwordServer():
         self.log('send detected')
         snowboydecoder.play_audio_file()
         #topic = 'hermes/hotword/{}/detected'.format(self.hotword)
-        topic = 'hermes/hotword/detected'
-        payload = json.dumps({"siteId": self.site})
+        topic = 'hermes/hotword/{}/detected'.format(self.site)
+        payload = json.dumps({"siteId": self.site, "sessionId": None})
         self.log(payload)
         self.send_message(topic,payload)
         # ?? should come from dialog service
