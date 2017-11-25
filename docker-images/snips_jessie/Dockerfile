@@ -1,5 +1,4 @@
-FROM schachr/raspbian-stretch:latest
-#FROM debian:jessie
+FROM syntithenai/snips_base
 MAINTAINER Steve Ryan <stever@syntithenai.com>
 
 
