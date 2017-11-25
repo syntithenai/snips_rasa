@@ -55,6 +55,10 @@ class SnowboyHotwordServer():
         self.active = True
         # listen for hotword
         self.model = os.environ['HOTWORD_MODEL']
+        self.detector = snowboythreaded.ThreadedDetector(self.model, sensitivity=0.5)
+        self.log('created')
+        self.detector.start()
+        self.log('started')
         
         # capture SIGINT signal, e.g., Ctrl+C
         #signal.signal(signal.SIGINT, signal_handler)
@@ -177,10 +181,6 @@ class SnowboyHotwordServer():
                #interrupt_check=self.interrupt_callback,
         #self.detector = snowboydecoder.HotwordDetector(self.model, sensitivity=0.5)
         #self.detector.start(detected_callback=self.send_detected, interrupt_check=self.interrupt_callback,sleep_time=0.03)
-        self.detector = snowboythreaded.ThreadedDetector(self.model, sensitivity=0.5)
-        self.log('created')
-        self.detector.start()
-        self.log('started')
         self.detector.start_recog(detected_callback=self.send_detected,sleep_time=0.03)
         self.log('hotword started')
         

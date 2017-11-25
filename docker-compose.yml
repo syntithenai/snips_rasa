@@ -1,6 +1,7 @@
 version: '2'
 
 services:
+
     mosquitto:
         # see docker-compose/manifest.yml
         image: syntithenai/mosquitto
@@ -32,33 +33,65 @@ services:
             - HOTWORD_ID=snowboy
 
     snips:
-        ##depends_on: ['snowboy','mosquitto']
+        depends_on: ['mosquitto']
         devices: ['/dev/snd']
-        image: syntithenai/snips_rasa:latest
-        #image: snipsdocker/platform:x86-latest
-        #privileged: true
-        #tty: true
-        #
-        command: --exclude-components snips-hotword --exclude-components  snips-queries -mqqt mosquitto:1883
-        #["--exclude-components snips-queries snips-hotword","-mqqt mosquitto:1883"]
         restart: always
+        image: syntithenai/snips:latest
+        command: --exclude-components snips-hotword --exclude-components  snips-queries -mqqt mosquitto:1883
+        volumes:
+            # authentication for pulse on linux laptop
+            - /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
+            # generic language model
+            - /home/stever/projects/snips-asr-model-en-500MB/snips-asr-model-en-500MB:/usr/share/snips/assistant/custom_asr
+            ## snips config
+            # assistant
+            - ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
+            # main config
+            - ./docker-compose/snips/snips.toml:/etc/snips.toml
         environment:
             - PULSE_SERVER=192.168.1.100
+        
+
+    rasa_nlu:
+        image: syntithenai/snips_rasa:latest
+        privileged: true
+        tty: true
+        working_dir: /opt/rasa/snips_rasa_nlu
+        environment:
+            - NLU_TRAINING_FILE=/opt/rasa/data/nlu-model/stories.md
+            - NLU_CONFIG_FILE=/opt/rasa/data/nlu-model/config.json
+            - MQTT_HOST=mosquitto
+            - MQTT_PORT=1883
+            - NLU_MODEL_FOLDER=/opt/rasa/data/nlu-model/default/model_20171125-071720
+            #/opt/rasa/data/rasa/projects/default/model_20171112-112834
+        entrypoint : ["/opt/rasa/snips_rasa_nlu/rasa_nlu_server.py"]
+        #entrypoint: ['/bin/bash']
         volumes:
-            - /home/stever/projects/snips-asr-model-en-500MB/snips-asr-model-en-500MB:/usr/share/snips/assistant/custom_asr
-        #    - /dev/snd:/dev/snd
-            # configure alsa for pulseaudio and link pulse cookie
-            #- ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
-            #export USER_ID=id -u $LOGNAME
-            #export PULSE_SERVER="unix:/run/user/"$USER_ID"/pulse/native"
-            - /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
-            # packages
-            - ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
             - ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
-            # snips config
+            - ./rasa_musicplayer:/opt/rasa/rasa_musicplayer
             - ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
-            - ./docker-compose/snips/snips.toml:/etc/snips.toml
-            - ./docker-compose/snips/snips.ini:/root/resources/snips.ini
+            - ./data:/opt/rasa/data
+            - ./docker-compose/supervisor-rasa.conf:/etc/supervisor/conf.d/supervisord.conf
+
+
+
+    #snips:
+        #volumes:
+            #- /home/stever/projects/snips-asr-model-en-500MB/snips-asr-model-en-500MB:/usr/share/snips/assistant/custom_asr
+        ##    - /dev/snd:/dev/snd
+            ## configure alsa for pulseaudio and link pulse cookie
+            ##- ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
+            ##export USER_ID=id -u $LOGNAME
+            ##export PULSE_SERVER="unix:/run/user/"$USER_ID"/pulse/native"
+            #- /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
+            ## packages
+            #- ./snips_rasa_ui:/opt/rasa/snips_rasa_ui
+            #- ./snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
+            ## snips config
+            #- ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
+            #- ./docker-compose/snips/snips.toml:/etc/snips.toml
+            # fix complaint missing template file
+            #- ./docker-compose/snips/snips.ini:/root/resources/snips.ini
 
     #snowboy:
         #image: syntithenai/snips_rasa:latest

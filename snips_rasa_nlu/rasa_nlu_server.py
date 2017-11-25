@@ -1,3 +1,4 @@
+#!/opt/rasa/anaconda/bin/python
 # -*-: coding utf-8 -*-
 """ Snips core server. """
 
@@ -33,7 +34,8 @@ class RasaNLUServer():
                           intent handler and intents registry.
         """
         self.thread_handler = ThreadHandler()
-
+        print('model')
+        print(nlu_model_path)
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
@@ -44,6 +46,7 @@ class RasaNLUServer():
         self.config_path = config_path
         # create an NLU interpreter based on trained NLU model
         self.interpreter = Interpreter.load(self.nlu_model_path, RasaNLUConfig(self.config_path))
+        print('loaded model')
 
 
     def start(self):
@@ -108,16 +111,20 @@ class RasaNLUServer():
         :param userdata: unused.
         :param msg: the MQTT message.
         """
-        #self.log("New message on topic {}".format(msg.topic))
         #self.log(client)
         #self.log(userdata)
         #self.log(msg.payload)
         if msg.payload is None or len(msg.payload) == 0:
             pass
-        if msg.topic is not None and msg.topic.startswith("hermes/nlu/") and msg.payload:
+        if msg.topic is not None and msg.topic.startswith("hermes/nlu") and msg.topic.endswith('/query') and msg.payload:
+            self.log("New message on topic {}".format(msg.topic))
             payload = json.loads(msg.payload.decode('utf-8'))
-            if 'text' in payload:
-                text = payload['text']
+            print(payload)
+            if 'input' in payload :
+                sessionId = payload['sessionId']
+                id = payload['id']
+                text = payload['input']
+                print(text)
                 if (text == "restart server"):
                     print('restart server')
                     self.interpreter = Interpreter.load(self.nlu_model_path, RasaNLUConfig(self.config_path))
@@ -129,10 +136,10 @@ class RasaNLUServer():
                     for entity in lookup['entities']:
                         slot = {"entity": entity['value'],"range": {"end": entity['end'],"start": entity['start']},"rawValue": entity['value'],"slotName": "entity","value": {"kind": "Custom","value": entity['value']}} 
                         slots.append(slot)
-                    
+                    print(slots)
                     intentName = "user_Kr5A7b4OD__{}".format(lookup['intent']['name'])
                     self.client.publish('hermes/nlu/intentParsed',
-                    payload=json.dumps({"input": text,"intent": {"intentName": intentName,"probability": 1.0},"slots": slots}), 
+                    payload=json.dumps({"id": id,"sessionId": sessionId, "input": text,"intent": {"intentName": intentName,"probability": 1.0},"slots": slots}), 
                 # 
                     qos=0,
                     retain=False)

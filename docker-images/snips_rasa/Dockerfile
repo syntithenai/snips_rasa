@@ -57,9 +57,19 @@ RUN cd /opt; git clone https://github.com/Kitt-AI/snowboy.git; cd snowboy; pytho
 #cp snowboydetect.py /opt/rasa/anaconda/lib/python2.7/ ; 
 RUN  cd /opt/snowboy ; /opt/rasa/anaconda/bin/python setup.py install;
 #RUN cp _snowboydetect.so /opt/rasa/anaconda/lib/
-RUN p /opt/snowboy/swig/Python/* /opt/snips_hotword_snowboy/
+
+RUN mkdir -p /opt/snips_hotword_snowboy ; cp /opt/snowboy/swig/Python/* /opt/snips_hotword_snowboy/
 
 #ENV PULSE_SERVER=192.168.1.100
+
+# raspi
+#RUN apt-get install -y oracle-java7-jdk
+# intel
+RUN apt-get install -y openjdk-7-jdk
+
+
+RUN /opt/rasa/anaconda/bin/pip install duckling
+
 
 #RUN touch /tmp/pulse-socket; chmod 777 /tmp/pulse-socket
 

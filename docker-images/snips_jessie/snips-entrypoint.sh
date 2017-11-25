@@ -6,34 +6,17 @@ then
     exec snips "$@"
 fi
 
-ASR_TYPE="snips"
 
-# Read "global" arguments
-USE_INTERNAL_MQTT=true
-ALL_SNIPS_COMPONENTS=("snips-asr-google" "snips-asr" "snips-audio-server" "snips-tts" "snips-hotword" "snips-queries" "snips-dialogue" "snips-analytics" "snips-debug","rasa-queries")
-declare -A SNIPS_COMPONENTS
-for c in ${ALL_SNIPS_COMPONENTS[@]}
-do
-    SNIPS_COMPONENTS[$c]=true
-done
-
-if [ -z "$USE_RASA_NLU" ]; then
-	ASSISTANT_FILE=/opt/snips/config/assistant/assistant.json
-	if [ ! -f "$ASSISTANT_FILE" ]
-	then
-		echo "Couldn't find any assistant"
-		exit 1
-	fi
-	ASR_TYPE=`cat $ASSISTANT_FILE|jq --raw-output '.asr.type'`
-	ANALYTICS_ENABLED=`cat $ASSISTANT_FILE|jq --raw-output '.analyticsEnabled'`
-	SNIPS_COMPONENTS["rasa-queries"]=false
-	SNIPS_COMPONENTS["snips-queries"]=true
-else
-	SNIPS_COMPONENTS["rasa-queries"]=true
-	SNIPS_COMPONENTS["snips-queries"]=false
+ASSISTANT_FILE=/usr/share/snips/assistant/assistant.json
+if [ ! -f "$ASSISTANT_FILE" ]
+then
+    echo "Couldn't find any assistant"
+    exit 1
 fi
 
 SUPERVISORD_CONF_FILE="/etc/supervisor/conf.d/supervisord.conf"
+ASR_TYPE=`cat $ASSISTANT_FILE|jq --raw-output '.asr.type'`
+ANALYTICS_ENABLED=`cat $ASSISTANT_FILE|jq --raw-output '.analyticsEnabled'`
 SNIPS_MOSQUITTO_FLAG="-h localhost -p 1883"
 
 
@@ -44,9 +27,9 @@ fi
 
 if [ -d "/opt/snips/asr" ]
 then
-    SNIPS_ASR_MODEL="/opt/snips/asr"
+    SNIPS_ASR_MODEL=""
 else
-    SNIPS_ASR_MODEL="/usr/share/snips/asr"
+    SNIPS_ASR_MODEL=""
 fi
 if [ -z "$SNIPS_ASR_ARGS" ]
 then
@@ -60,17 +43,17 @@ fi
 
 if [ -z "$SNIPS_DIALOGUE_MQTT_ARGS" ]
 then
-    SNIPS_DIALOGUE_MQTT_ARGS="--assistant /opt/snips/config/assistant/assistant.json --config /usr/share/snips/dialogue --timeout 20"
+    SNIPS_DIALOGUE_MQTT_ARGS=""
 fi
 
 if [ -z "$SNIPS_ASR_GOOGLE_MQTT_ARGS" ]
 then
-    SNIPS_ASR_GOOGLE_MQTT_ARGS="--assistant /opt/snips/config/assistant --credentials /opt/snips/config/googlecredentials.json"
+    SNIPS_ASR_GOOGLE_MQTT_ARGS=""
 fi
 
 if [ -z "$SNIPS_HOTWORD_ARGS" ]
 then
-    SNIPS_HOTWORD_ARGS="/usr/share/snips/hotword/"
+    SNIPS_HOTWORD_ARGS=""
 fi
 if [ -z "$SNIPS_HOTWORD_MQTT_ARGS" ]
 then
@@ -79,16 +62,23 @@ fi
 
 if [ -z "$SNIPS_ANALYTICS_MQTT_ARGS" ]
 then
-    SNIPS_ANALYTICS_MQTT_ARGS="--assistant /opt/snips/config/assistant --user_directory /opt/snips/config"
+    SNIPS_ANALYTICS_MQTT_ARGS=""
 fi
 
 if [ -z "$SNIPS_QUERIES_MQTT_ARGS" ]
 then
-    SNIPS_QUERIES_MQTT_ARGS="--assistant /opt/snips/config/assistant --user_directory /opt/snips/config"
+    SNIPS_QUERIES_MQTT_ARGS=""
 fi
 
 
-
+# Read "global" arguments
+USE_INTERNAL_MQTT=true
+ALL_SNIPS_COMPONENTS=("snips-asr-google" "snips-asr" "snips-audio-server" "snips-tts" "snips-hotword" "snips-queries" "snips-dialogue" "snips-analytics" "snips-debug")
+declare -A SNIPS_COMPONENTS
+for c in ${ALL_SNIPS_COMPONENTS[@]}
+do
+    SNIPS_COMPONENTS[$c]=true
+done
 
 if [ "$ASR_TYPE" != "google" ]
 then
@@ -226,11 +216,11 @@ EOT
 # Generate snips-asr-google
 if [ "${SNIPS_COMPONENTS['snips-asr-google']}" = true ]
 then
-    echo Spawning /usr/bin/snips-asr-google $LOGLEVEL $SNIPS_ASR_GOOGLE_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_ASR_GOOGLE_MQTT_ARGS
+    echo Spawning /usr/bin/snips-asr-google $LOGLEVEL $SNIPS_ASR_GOOGLE_ARGS $SNIPS_MQTT_FLAG $SNIPS_ASR_GOOGLE_MQTT_ARGS
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 
 [program:snips-asr-google]
-command=/usr/bin/snips-asr-google $LOGLEVEL $SNIPS_ASR_GOOGLE_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_ASR_GOOGLE_MQTT_ARGS
+command=/usr/bin/snips-asr-google $LOGLEVEL $SNIPS_ASR_GOOGLE_ARGS $SNIPS_MQTT_FLAG $SNIPS_ASR_GOOGLE_MQTT_ARGS
 autorestart=true
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -247,11 +237,11 @@ fi
 # Generate snips-asr
 if [ "${SNIPS_COMPONENTS['snips-asr']}" = true ]
 then
-    echo Spawning /usr/bin/snips-asr $LOGLEVEL $SNIPS_ASR_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_ASR_MQTT_ARGS
+    echo Spawning /usr/bin/snips-asr $LOGLEVEL $SNIPS_ASR_ARGS $SNIPS_MQTT_FLAG $SNIPS_ASR_MQTT_ARGS
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 
 [program:snips-asr]
-command=/usr/bin/snips-asr $LOGLEVEL $SNIPS_ASR_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_ASR_MQTT_ARGS
+command=/usr/bin/snips-asr $LOGLEVEL $SNIPS_ASR_ARGS $SNIPS_MQTT_FLAG $SNIPS_ASR_MQTT_ARGS
 autorestart=true
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -268,11 +258,11 @@ fi
 # Generate snips-audio-server
 if [ "${SNIPS_COMPONENTS['snips-audio-server']}" = true ]
 then
-    echo Spawning /usr/bin/snips-audio-server $LOGLEVEL $SNIPS_AUDIO_SERVER_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_AUDIO_SERVER_MQTT_ARGS
+    echo Spawning /usr/bin/snips-audio-server $LOGLEVEL $SNIPS_AUDIO_SERVER_ARGS $SNIPS_MQTT_FLAG $SNIPS_AUDIO_SERVER_MQTT_ARGS
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 
 [program:snips-audio-server]
-command=/usr/bin/snips-audio-server $LOGLEVEL $SNIPS_AUDIO_SERVER_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_AUDIO_SERVER_MQTT_ARGS
+command=/usr/bin/snips-audio-server $LOGLEVEL $SNIPS_AUDIO_SERVER_ARGS $SNIPS_MQTT_FLAG $SNIPS_AUDIO_SERVER_MQTT_ARGS
 autorestart=true
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -289,10 +279,10 @@ fi
 # Generate snips-tts
 if [ "${SNIPS_COMPONENTS['snips-tts']}" = true ]
 then
-    echo Spawning /usr/bin/snips-tts $LOGLEVEL $SNIPS_TTS_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_TTS_MQTT_FLAG
+    echo Spawning /usr/bin/snips-tts $LOGLEVEL $SNIPS_TTS_ARGS $SNIPS_MQTT_FLAG $SNIPS_TTS_MQTT_FLAG
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 [program:snips-tts]
-command=/usr/bin/snips-tts $LOGLEVEL $SNIPS_TTS_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_TTS_MQTT_FLAG
+command=/usr/bin/snips-tts $LOGLEVEL $SNIPS_TTS_ARGS $SNIPS_MQTT_FLAG $SNIPS_TTS_MQTT_FLAG
 autorestart=true
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -309,10 +299,10 @@ fi
 # Generate snips-hotword
 if [ "${SNIPS_COMPONENTS['snips-hotword']}" = true ]
 then
-    echo Spawning /usr/bin/snips-hotword $SNIPS_HOTWORD_ARGS $LOGLEVEL mqtt $SNIPS_MQTT_FLAG $SNIPS_HOTWORD_MQTT_ARGS
+    echo Spawning /usr/bin/snips-hotword $SNIPS_HOTWORD_ARGS $LOGLEVEL $SNIPS_MQTT_FLAG $SNIPS_HOTWORD_MQTT_ARGS
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 [program:snips-hotword]
-command=/usr/bin/snips-hotword $SNIPS_HOTWORD_ARGS $LOGLEVEL mqtt $SNIPS_MQTT_FLAG $SNIPS_HOTWORD_MQTT_ARGS
+command=/usr/bin/snips-hotword $SNIPS_HOTWORD_ARGS $LOGLEVEL $SNIPS_MQTT_FLAG $SNIPS_HOTWORD_MQTT_ARGS
 autorestart=true
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -329,10 +319,10 @@ fi
 # Generate snips-queries
 if [ "${SNIPS_COMPONENTS['snips-queries']}" = true ]
 then
-    echo Spawning /usr/bin/snips-queries $LOGLEVEL mqtt $SNIPS_MQTT_FLAG $SNIPS_QUERIES_MQTT_ARGS
+    echo Spawning /usr/bin/snips-queries $LOGLEVEL $SNIPS_MQTT_FLAG $SNIPS_QUERIES_MQTT_ARGS
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 [program:snips-queries]
-command=/usr/bin/snips-queries $LOGLEVEL mqtt $SNIPS_MQTT_FLAG $SNIPS_QUERIES_MQTT_ARGS
+command=/usr/bin/snips-queries $LOGLEVEL $SNIPS_MQTT_FLAG $SNIPS_QUERIES_MQTT_ARGS
 autorestart=true
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -345,33 +335,14 @@ else
     echo "snips-queries is disabled"
 fi
 
-# Generate rasa-queries
-if [ "${SNIPS_COMPONENTS['rasa-queries']}" = true ]
-then
-    echo Spawning /usr/bin/rasa-queries
-    cat <<EOT >> $SUPERVISORD_CONF_FILE
-[program:rasa-queries]
-command=/opt/rasa/snips_rasa_nlu/start.sh
-autorestart=true
-directory=/opt/rasa/snips_rasa_nlu
-environment=RUMQTT_READ_TIMEOUT_MS="50"
-stderr_logfile=/dev/fd/1
-stderr_logfile_maxbytes=0
-stdout_logfile=/dev/fd/1
-stdout_logfile_maxbytes=0
-EOT
-else
-    echo "rasa-queries is disabled"
-fi
-
 
 # Generate snips-dialogue
 if [ "${SNIPS_COMPONENTS['snips-dialogue']}" = true ]
 then
-    echo Spawning /usr/bin/snips-dialogue $LOGLEVEL $SNIPS_DIALOGUE_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_DIALOGUE_MQTT_ARGS
+    echo Spawning /usr/bin/snips-dialogue $LOGLEVEL $SNIPS_DIALOGUE_ARGS $SNIPS_MQTT_FLAG $SNIPS_DIALOGUE_MQTT_ARGS
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 [program:snips-dialogue]
-command=/usr/bin/snips-dialogue $LOGLEVEL $SNIPS_DIALOGUE_ARGS mqtt $SNIPS_MQTT_FLAG $SNIPS_DIALOGUE_MQTT_ARGS
+command=/usr/bin/snips-dialogue $LOGLEVEL $SNIPS_DIALOGUE_ARGS $SNIPS_MQTT_FLAG $SNIPS_DIALOGUE_MQTT_ARGS
 autorestart=true
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -388,10 +359,10 @@ fi
 # Generate snips-analytics
 if [ "${SNIPS_COMPONENTS['snips-analytics']}" = true ]
 then
-    echo Spawning /usr/bin/snips-analytics $LOGLEVEL mqtt $SNIPS_MQTT_FLAG $SNIPS_ANALYTICS_MQTT_ARGS 
+    echo Spawning /usr/bin/snips-analytics $LOGLEVEL $SNIPS_MQTT_FLAG $SNIPS_ANALYTICS_MQTT_ARGS 
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 [program:snips-analytics]
-command=/usr/bin/snips-analytics $LOGLEVEL mqtt $SNIPS_MQTT_FLAG $SNIPS_ANALYTICS_MQTT_ARGS
+command=/usr/bin/snips-analytics $LOGLEVEL $SNIPS_MQTT_FLAG $SNIPS_ANALYTICS_MQTT_ARGS
 autorestart=unexpected
 directory=/root
 environment=RUMQTT_READ_TIMEOUT_MS="50"
@@ -412,7 +383,7 @@ then
     echo Spawning snips-debug
     cat <<EOT >> $SUPERVISORD_CONF_FILE
 [program:snips-debug]
-command=mosquitto_sub -v $SNIPS_MOSQUITTO_FLAG -t '#'
+command=mosquitto_sub -v $SNIPS_MOSQUITTO_FLAG -t "hermes/#" -T "hermes/audioServer/+/audioFrame"
 autorestart=true
 directory=/root
 stderr_logfile=/dev/fd/1
@@ -432,9 +403,5 @@ then
 fi
 
 export RUMQTT_READ_TIMEOUT_MS=50
-
-
-
-
 /usr/bin/supervisord -c $SUPERVISORD_CONF_FILE
 
