@@ -29,7 +29,8 @@ COPY snips-tts /usr/bin/snips-tts
 # DONE SNIPS 
 
 # SNOWBOY / RECENT SWIG * using default python rather than anaconda 
-RUN apt-get install  -fyq  --force-yes  wget swig3.0 python-pyaudio python3-pyaudio sox libatlas-base-dev libpcre3-dev python-pip git python-dev portaudio19-dev psutils pulseaudio
+RUN apt-get install  -fyq  --force-yes  wget swig3.0 python-pyaudio python3-pyaudio sox python-pip git python-dev psutils pulseaudio libpcre3-dev portaudio19-dev
+# libatlas-base-dev 
 RUN pip install pyaudio
 #apt-get install libportaudio2 libportaudiocpp0 python-pyaudio python-dev
 
