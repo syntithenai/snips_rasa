@@ -37,6 +37,16 @@ RUN /opt/rasa/anaconda/bin/pip install -U spacy ; echo "done"
 RUN /opt/rasa/anaconda/bin/python -m spacy download en ; echo "done" 
 RUN /opt/rasa/anaconda/bin/pip install -U Flask ; echo "done" 
 
+# raspi
+#RUN apt-get install -y oracle-java7-jdk
+# intel
+RUN apt-get install -y openjdk-7-jdk
+
+
+RUN /opt/rasa/anaconda/bin/pip install duckling
+
+
+
 # hacked entrypoint script and ENV VAR to trigger rasa
 #COPY ./snips-entrypoint.sh /opt/snips/snips-entrypoint.sh
 #ENV USE_RASA_NLU 1
@@ -62,13 +72,6 @@ RUN mkdir -p /opt/snips_hotword_snowboy ; cp /opt/snowboy/swig/Python/* /opt/sni
 
 #ENV PULSE_SERVER=192.168.1.100
 
-# raspi
-#RUN apt-get install -y oracle-java7-jdk
-# intel
-RUN apt-get install -y openjdk-7-jdk
-
-
-RUN /opt/rasa/anaconda/bin/pip install duckling
 
 
 #RUN touch /tmp/pulse-socket; chmod 777 /tmp/pulse-socket
