@@ -10,13 +10,8 @@ RUN  export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated 
 
 RUN export DEBIAN_FRONTEND="noninteractive" ;  apt-get -f install && apt-get install  -fyq  --force-yes init-system-helpers
 
-# amd64
-#RUN bash -c  'echo "deb https://debian.snips.ai/$(lsb_release -cs) stable main" > /etc/apt/sources.list.d/snips.list'
-#RUN apt-key adv --keyserver pgp.mit.edu --recv-keys F727C778CCB0A455
-# raspbian
-RUN bash -c  'echo "deb https://raspbian.snips.ai/$(lsb_release -cs) stable main" > /etc/apt/sources.list.d/snips.list'
-RUN apt-key adv --keyserver pgp.mit.edu --recv-keys D4F50CDCA10A2849
-
+# SWITCH ON ARCHITECTURE TO SELECT APT SOURCES
+RUN if [ `uname -m` = "armv7l" ]; then  bash -c  'echo "deb https://raspbian.snips.ai/$(lsb_release -cs) stable main" > /etc/apt/sources.list.d/snips.list'; apt-key adv --keyserver pgp.mit.edu --recv-keys D4F50CDCA10A2849; elif [ `uname -m` = "x86_64" ]; then bash -c  'echo "deb https://debian.snips.ai/$(lsb_release -cs) stable main" > /etc/apt/sources.list.d/snips.list'; apt-key adv --keyserver pgp.mit.edu --recv-keys F727C778CCB0A455; fi
 
 RUN apt-get update 
 RUN apt-get install -y snips-platform-voice pulseaudio jq snips-watch
