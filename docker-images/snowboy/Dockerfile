@@ -4,8 +4,12 @@ MAINTAINER Steve Ryan <stever@syntithenai.com>
 COPY ./rpi-arm-raspbian-8.0-1.2.0.tar.bz2 /tmp/
 COPY ./ubuntu1404-x86_64-1.2.0.tar.bz2 /tmp/
 
-RUN export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update && apt-get install -y pulseaudio swig3.0 python-pyaudio python3-pyaudio sox bzip2 nano python-pip ; 
-RUN  export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update && apt-get -f install && apt-get install  -fyq  --force-yes   virtualenv python-pip python-sklearn python-dev nano apt-transport-https wget dirmngr nano bzip2 git lsb-release supervisor init-system-helpers wget swig3.0 python-pyaudio python3-pyaudio sox python-pip git python-dev psutils pulseaudio libpcre3-dev portaudio19-dev  libatlas-base-dev  libpng12-0 libpng12-dev  libfreetype6 libfreetype6-dev 
+#RUN export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update && apt-get install -y pulseaudio swig3.0 python-pyaudio python3-pyaudio sox bzip2 nano python-pip ; 
+#RUN  export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update && apt-get -f install && apt-get install  -fyq  --force-yes   virtualenv python-pip python-sklearn python-dev nano apt-transport-https wget dirmngr nano bzip2 git lsb-release supervisor init-system-helpers wget swig3.0 python-pyaudio python3-pyaudio sox python-pip git python-dev psutils pulseaudio libpcre3-dev portaudio19-dev  libatlas-base-dev  libpng12-0 libpng12-dev  libfreetype6 
+
+#libfreetype6-dev 
+
+RUN DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update &&  apt-get install -y swig3.0 python-pyaudio python3-pyaudio sox python-pip
 
 RUN pip install pyaudio; 
 RUN apt-get install -y libatlas-base-dev
