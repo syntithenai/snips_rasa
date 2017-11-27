@@ -4,24 +4,30 @@
 
 !! This project is a work in progress. 
 
-This repository is a collection of projects related to Snips AI.
+This repository is a collection of projects related to [Snips AI](http://snips.ai)  and [RASA AI](http://rasa.ai).
+
 
 - Dockerfile to build an image containing necessary files for pulseaudio, snips, snowboy and rasa (snips_rasa). 
 - docker-compose.yml file to start a suite including 
     - snips
     - replacement server for hotword detector using snowboy (snips_hotword_snowboy)
     - replacement server for NLU processor using rasa NLU (snips_rasa_nlu)
-    - pulseaudio server to share the sound.
-    - skills server using RASA core and story format described below to listen for hermes/nlu/intentParsed and take actions based on stories.
-    - web server with site for editing stories to generate rasa_nlu, rasa_core and snips stubs from a story.
+    
+### WIP    
+- pulseaudio server to share the sound.
+- skills server using RASA core and story format described below to listen for hermes/nlu/intentParsed and take actions based on stories.
+- web server with site for editing stories to generate rasa_nlu, rasa_core and snips stubs from a story.
     
 ## Quick Start
 
 To get started 
 
-```pip install docker-compose```
+- [Install docker](https://www.google.com.au/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwiPkYafmt3XAhUKJZQKHU3DBO4QFggoMAA&url=https%3A%2F%2Fdocs.docker.com%2Fengine%2Finstallation%2F&usg=AOvVaw3LbZ234MXDYJLII4P-TXAZ)
 
-```docker-compose up```
+- ```pip install docker-compose```
+- ```git clone https://github.com/syntithenai/snips_rasa.git```
+- ```cd snips_rasa```
+- ```docker-compose up```
 
     
 ## Sound Configuration

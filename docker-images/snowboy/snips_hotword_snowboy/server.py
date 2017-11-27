@@ -1,5 +1,3 @@
-#!/opt/rasa/anaconda/bin/python
-
 # -*-: coding utf-8 -*-
 """ Snips core server. """
 
@@ -13,10 +11,6 @@ from socket import error as socket_error
 import paho.mqtt.client as mqtt
 
 from thread_handler import ThreadHandler
-
-from rasa_nlu.config import RasaNLUConfig
-from rasa_nlu.converters import load_data
-from rasa_nlu.model import Metadata, Interpreter
 
 import sys
 sys.path.append('')
