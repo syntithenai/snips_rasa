@@ -11,10 +11,12 @@ COPY ./ubuntu1404-x86_64-1.2.0.tar.bz2 /tmp/
 
 RUN DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update &&  apt-get install -y swig3.0 python-pyaudio python3-pyaudio sox python-pip
 
+RUN apt-get install -y python-dev 
+
 RUN pip install pyaudio; 
-RUN apt-get install -y libatlas-base-dev
+RUN apt-get install -y libatlas-base-dev pulseaudio
 RUN pip install paho-mqtt
-RUN mkdir -p /opt/snowboy &&  cd /opt/snowboy && if [ `uname -m` = "armv7l" ]; then  bunzip2 /tmp/rpi-arm-raspbian-8.0-1.2.0.tar.bz2 ; elif [ `uname -m` = "x86_64" ]; then bunzip2 /tmp/ubuntu1404-x86_64-1.2.0.tar.bz2; fi
+RUN mkdir -p /opt/snowboy &&  cd /opt/snowboy && if [ `uname -m` = "armv7l" ]; then  bunzip2 /tmp/rpi-arm-raspbian-8.0-1.2.0.tar.bz2 && tar xf /tmp/rpi-arm-raspbian-8.0-1.2.0.tar ; elif [ `uname -m` = "x86_64" ]; then bunzip2 /tmp/ubuntu1404-x86_64-1.2.0.tar.bz2 && tar xf /tmp/ubuntu1404-x86_64-1.2.0.tar; fi
 
 COPY ./snips_hotword_snowboy/* /opt/snips_hotword_snowboy/
 COPY ./snips_hotword_snowboy/resources/* /opt/snips_hotword_snowboy/resources/
