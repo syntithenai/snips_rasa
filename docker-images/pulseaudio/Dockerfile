@@ -72,9 +72,16 @@ RUN addgroup -S -g 29 pulse && \
     mkdir /tmp/pulse && \
     chown -R pulse:pulse /home/pulse /tmp/pulse && chmod -R 777 /home/pulse
 
+COPY ./start.sh /tmp/start.sh 
+RUN chmod 777 /tmp/start.sh
+
+#COPY ./pulse-daemon.conf /usr/local/etc/pulse/daemon.conf 
+
+
 USER pulse
 
-VOLUME ["/tmp/pulse", "/usr/local/etc/pulse"]
+#VOLUME ["/tmp/pulse", "/usr/local/etc/pulse"]
+#RUN touch /tmp/pulse/socket; chmod 777 /tmp/pulse/socket
 
 ENTRYPOINT ["pulseaudio"]
 CMD ["--log-target=stderr"]

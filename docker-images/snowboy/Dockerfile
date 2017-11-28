@@ -16,10 +16,12 @@ RUN apt-get install -y python-dev
 RUN pip install pyaudio; 
 RUN apt-get install -y libatlas-base-dev pulseaudio
 RUN pip install paho-mqtt
-RUN mkdir -p /opt/snowboy &&  cd /opt/snowboy && if [ `uname -m` = "armv7l" ]; then  bunzip2 /tmp/rpi-arm-raspbian-8.0-1.2.0.tar.bz2 && tar xf /tmp/rpi-arm-raspbian-8.0-1.2.0.tar ; elif [ `uname -m` = "x86_64" ]; then bunzip2 /tmp/ubuntu1404-x86_64-1.2.0.tar.bz2 && tar xf /tmp/ubuntu1404-x86_64-1.2.0.tar; fi
+RUN mkdir -p /opt/snowboy && mkdir /tmp/snowboy && cd /tmp/snowboy && if [ `uname -m` = "armv7l" ]; then  bunzip2 /tmp/rpi-arm-raspbian-8.0-1.2.0.tar.bz2 && tar xf /tmp/rpi-arm-raspbian-8.0-1.2.0.tar; rpi-arm-raspbian-8.0-1.2.0 ; elif [ `uname -m` = "x86_64" ]; then bunzip2 /tmp/ubuntu1404-x86_64-1.2.0.tar.bz2 && tar xf /tmp/ubuntu1404-x86_64-1.2.0.tar;  cd ubuntu1404-x86_64-1.2.0; fi; cp -a * /opt/snowboy
 
 COPY ./snips_hotword_snowboy/* /opt/snips_hotword_snowboy/
 COPY ./snips_hotword_snowboy/resources/* /opt/snips_hotword_snowboy/resources/
+
+COPY ./client.conf /etc/pulse/client.conf
 
 ENTRYPOINT ["/opt/snips_hotword_snowboy/start.sh"]
 

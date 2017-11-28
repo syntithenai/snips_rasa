@@ -49,13 +49,18 @@ Enable by adding PULSE_HOST=ip address or socket path as an environment variable
 - PULSE_SERVER="unix:/run/user/"$USER_ID"/pulse/native"
 
 
+## Snowboy
+The docker-compose file contains environment variables to configure snowboy including a path to model file.
+Create a model file at []https://snowboy.kitt.ai/](https://snowboy.kitt.ai/)
+
+
     
 ## Roadmap
 
 My goal is to better understand what is possible in conversational UI by developing a user interface that
 brings together RASA story telling format and snips skills.
 
-My previous experience develop a voice first music player using dialogflow was very command like
+My previous experience develop a voice first music player using dialogflow was very command like. For speech interactions to be widely accepted, recognition needs to be much more flexible and forgiving. I'm hopeful that RASA core will provide that flexibility.
 
 As a starting point a minimal text format.
 
