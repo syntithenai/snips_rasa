@@ -6,7 +6,8 @@ RUN  export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated 
 #  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*;
 
 # USE (MORE EFFICIENT) ORACLE JDK FOR RASPI
-RUN if [ `uname -m` = "armv7l" ]; then  apt-get install -y oracle-java7-jdk; elif [ `uname -m` = "x86_64" ]; then apt-get install -y openjdk-7-jdk; fi
+#RUN if [ `uname -m` = "armv7l" ]; then  apt-get install -y oracle-java7-jdk; elif [ `uname -m` = "x86_64" ]; then apt-get install -y openjdk-7-jdk; fi
+RUN apt-get install -y openjdk-7-jdk
 
 # Download and install Anaconda
 # SWITCH ON ARCHITECTURE TO SELECT SOURCES
