@@ -2,7 +2,7 @@ FROM syntithenai/snips_base
 MAINTAINER Steve Ryan <stever@syntithenai.com>
 
 # system dependancies
-RUN  export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update && apt-get -f install && apt-get install  -fyq  --force-yes   virtualenv python-pip python-sklearn python-dev libpng12-0 libpng12-dev  libfreetype6 libfreetype6-dev nano apt-transport-https wget
+RUN  export DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update && apt-get -f install && apt-get install  -fyq  --force-yes   virtualenv python-pip python-sklearn python-dev libpng12-0 libpng12-dev  libfreetype6  nano apt-transport-https wget
 #  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*;
 
 # USE (MORE EFFICIENT) ORACLE JDK FOR RASPI
