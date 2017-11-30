@@ -1,5 +1,5 @@
 #!/bin/sh
-cp /opt/snowboy/* /opt/snips_hotword_snowboy/
+cp -r /opt/snowboy/* /opt/snips_hotword_snowboy/
 cd /opt/snips_hotword_snowboy/
 #/opt/rasa/anaconda/bin/
 python /opt/snips_hotword_snowboy/server.py 

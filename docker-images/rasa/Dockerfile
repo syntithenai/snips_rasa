@@ -11,9 +11,11 @@ RUN apt-get install -y default-jdk
 
 # Download and install Anaconda
 # SWITCH ON ARCHITECTURE TO SELECT SOURCES
-RUN if [ `uname -m` = "armv7l" ]; then  mkdir /opt/rasa  &&  export HOME=/opt/rasa/ && export ANACONDA_REPO='http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-armv7l.sh' && export ANACONDA_INSTALLER='Miniconda3-latest-Linux-armv7l.sh' && wget -P /tmp/ $ANACONDA_REPO  && bash "/tmp/$ANACONDA_INSTALLER" -b -p $HOME/anaconda &&  export PATH="$HOME/anaconda/bin:$PATH" &&  echo 'export PATH="$HOME/anaconda/bin:$PATH"' >> ~/.bash_profile &&  echo 'export PATH="~/anaconda/bin:$PATH"' >> ~/.bashrc; elif [ `uname -m` = "x86_64" ]; then mkdir /opt/rasa  &&  export HOME=/opt/rasa/ && export ANACONDA_REPO='https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86.sh' && export ANACONDA_INSTALLER='Miniconda3-latest-Linux-x86.sh' && wget -P /tmp/ $ANACONDA_REPO  && bash "/tmp/$ANACONDA_INSTALLER" -b -p $HOME/anaconda &&  export PATH="$HOME/anaconda/bin:$PATH" &&  echo 'export PATH="$HOME/anaconda/bin:$PATH"' >> ~/.bash_profile &&  echo 'export PATH="~/anaconda/bin:$PATH"' >> ~/.bashrc; fi
+RUN if [ `uname -m` = "armv7l" ]; then  mkdir /opt/rasa  &&  export HOME=/opt/rasa/ && export ANACONDA_REPO='http://repo.continuum.io/miniconda/Miniconda-latest-Linux-armv7l.sh' && export ANACONDA_INSTALLER='Miniconda-latest-Linux-armv7l.sh' && wget -P /tmp/ $ANACONDA_REPO  && bash "/tmp/$ANACONDA_INSTALLER" -b -p $HOME/anaconda &&  export PATH="$HOME/anaconda/bin:$PATH" &&  echo 'export PATH="$HOME/anaconda/bin:$PATH"' >> ~/.bash_profile &&  echo 'export PATH="~/anaconda/bin:$PATH"' >> ~/.bashrc; elif [ `uname -m` = "x86_64" ]; then mkdir /opt/rasa  &&  export HOME=/opt/rasa/ && export ANACONDA_REPO='http://repo.continuum.io/miniconda/Miniconda2-4.3.30-Linux-x86_64.sh' && export ANACONDA_INSTALLER='Miniconda2-4.3.30-Linux-x86_64.sh' && wget -P /tmp/ $ANACONDA_REPO  && bash "/tmp/$ANACONDA_INSTALLER" -b -p $HOME/anaconda &&  export PATH="$HOME/anaconda/bin:$PATH" &&  echo 'export PATH="$HOME/anaconda/bin:$PATH"' >> ~/.bash_profile &&  echo 'export PATH="~/anaconda/bin:$PATH"' >> ~/.bashrc; fi
 
 
+# https://repo.continuum.io/miniconda/Miniconda3-4.3.30-Linux-x86_64.sh
+# http://repo.continuum.io/miniconda/Miniconda2-4.3.30-Linux-x86_64.sh
 #https://repo.continuum.io/miniconda/Miniconda-3.16.0-Linux-x86_64.sh
 
 
@@ -40,12 +42,12 @@ RUN /opt/rasa/anaconda/bin/pip install -U Flask ; echo "done"
 RUN /opt/rasa/anaconda/bin/pip install duckling
 
 # rasa core
-#RUN /opt/rasa/anaconda/bin/pip install pypandoc
-#RUN  apt-get install -y  pandoc
-#RUN cd /opt/rasa && git clone https://github.com/RasaHQ/rasa_core.git 
-#COPY rasa_core_requirements.txt /opt/rasa/rasa_core/requirements.txt
-#RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -r requirements.txt 
-#RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -e .
+RUN /opt/rasa/anaconda/bin/pip install pypandoc
+RUN  apt-get install -y  pandoc
+RUN cd /opt/rasa && git clone https://github.com/RasaHQ/rasa_core.git 
+COPY rasa_core_requirements.txt /opt/rasa/rasa_core/requirements.txt
+RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -r requirements.txt 
+RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -e .
 
 
 # hacked entrypoint script and ENV VAR to trigger rasa
