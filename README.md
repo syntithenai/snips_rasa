@@ -12,11 +12,18 @@ This repository is a collection of projects related to [Snips AI](http://snips.a
     - snips
     - replacement server for hotword detector using snowboy (snips_hotword_snowboy)
     - replacement server for NLU processor using rasa NLU (snips_rasa_nlu)
+    - pulseaudio server to share the sound.
     
 ### WIP    
-- pulseaudio server to share the sound.
 - skills server using RASA core and story format described below to listen for hermes/nlu/intentParsed and take actions based on stories.
 - web server with site for editing stories to generate rasa_nlu, rasa_core and snips stubs from a story.
+
+## Architecture Support
+
+The Dockerfiles build on both arm7(Raspberry Pi) and x86_64(Linux desktop/server).
+
+It is apparently possible to install pulseaudio on MS Windows and MacOSX which should allow the suite to be used with Docker on other platforms than Linux.
+
     
 ## Quick Start
 
@@ -28,32 +35,76 @@ To get started
 - ```git clone https://github.com/syntithenai/snips_rasa.git```
 - ```cd snips_rasa```
 - ```docker-compose up```
+- OR where pulseaudio is running on the host without extra config
+- ```pasuspender -- docker-compose up```
+
+
+!! You will need at least 16G of storage space to install and run the suite.
 
     
+## Snowboy
+The docker-compose file contains environment variables to configure snowboy including 
+
+- a path to model file. Create a model file at [https://snowboy.kitt.ai/](https://snowboy.kitt.ai/)
+- site id for multiroom snips
+- hotword ID 
+
+
+```    environment:
+        - HOTWORD_MODEL=/opt/snips_hotword_snowboy/resources/snowboy.umdl
+        - SITE_ID=default
+        - HOTWORD_ID=snowboy
+```
+
+## Snips
+
+The generic asr model is built into the snips image. To override it, use docker-compose to mount a host volume containing a different model.
+
+The image comes with a music player assistant as an example. Currently the snips assistant can be overridden by volume mount in docker-compose. In the future, the snips assistant files will be generated based on rasa stories.
+
+Similarly the config file is a volume mount.
+
+```
+volumes:
+            # generic model is built into image, override with other models here
+            #- /home/stever/projects/snips-asr-model-en-500MB/snips-asr-model-en-500MB:/usr/share/snips/assistant/custom_asr
+            # snips config
+            - ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
+            - ./docker-compose/snips/snips.toml:/etc/snips.toml
+```    
+
+
+    
+## RASA    
+
+```       
+       environment:
+            - NLU_TRAINING_FILE=/opt/rasa/data/nlu-model/stories.md
+            - NLU_CONFIG_FILE=/opt/rasa/data/nlu-model/config.json
+            - NLU_MODEL_FOLDER=/opt/rasa/data/nlu-model/default/model_20171125-071720
+ ```    
+
+
 ## Sound Configuration
 
 In /etc/asound.conf, types dmix and dsnoop are fine for mixing/sharing device access across multiple services running natively but inside docker, the first container locks the sound device.
 
-To allow multiple containers shared access to sound inside Docker it is possible to run pulseaudio.
-Alsa supports pcm type pulseaudio which becomes the default when pulseaudio is installed so applications can just continue to access /dev/sound oblivious of anything beyond Alsa. (and nothing locks)
+To allow multiple containers shared access to sound inside Docker a container running pulseaudio is included.
 
-Pulseaudio could be run on the host or inside a container. In both cases, authenticated sharing is possible by volume mounting the cookie file (tcp) or the socket (unix)
+Other containers in the docker-compose suite can access the server through a shared socket. 
 
- - /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
- - /tmp/pulse-socket:/tmp/pulse-socket 
+The server can be configured to use the sound hardware direct(default) or pulseaudio on the host system by editing the docker-compose file to remove comments and update to the IP address of the docker host and the path to the pulse cookie on the host.
 
-All containers need pulseaudio installed to function as clients.
-Enable by adding PULSE_HOST=ip address or socket path as an environment variable
+```
+ # proxy for host pulseaudio server
+        #environment: ['PULSE_SERVER=192.168.1.100']
+        volumes: 
+            - ./pulse:/tmp/pulse
+            # proxy for host pulseaudio server auth cookie
+            #- /home/stever/.config/pulse/cookie:/root/.config/pulse/cookie
+```
 
-- PULSE_SERVER=192.168.1.100
-- PULSE_SERVER="unix:/run/user/"$USER_ID"/pulse/native"
-
-
-## Snowboy
-The docker-compose file contains environment variables to configure snowboy including a path to model file.
-Create a model file at []https://snowboy.kitt.ai/](https://snowboy.kitt.ai/)
-
-
+    
     
 ## Roadmap
 
@@ -71,7 +122,7 @@ As a starting point a minimal text format.
 - Actions sentences preceded by - by default return the text and where the text starts with an _ are executed (snips skills)
 
 
-Confirmations, Yes/No Response and Form Wizard stories and more are possible.
+With the story format, confirmations, Yes/No responses, form wizard (slot filling) stories and more are possible.
 
 
 
