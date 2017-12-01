@@ -49,6 +49,7 @@ COPY rasa_core_requirements.txt /opt/rasa/rasa_core/requirements.txt
 RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -r requirements.txt 
 RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -e .
 
+RUN /opt/rasa/anaconda/bin/pip install paho-mqtt
 
 # hacked entrypoint script and ENV VAR to trigger rasa
 #COPY ./snips-entrypoint.sh /opt/snips/snips-entrypoint.sh

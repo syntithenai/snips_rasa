@@ -16,7 +16,7 @@ RUN apt-get install -y python-dev
 RUN pip install pyaudio; 
 RUN apt-get install -y libatlas-base-dev pulseaudio
 RUN pip install paho-mqtt
-RUN mkdir -p /opt/snowboy && mkdir /tmp/snowboy && cd /tmp/snowboy && if [ `uname -m` = "armv7l" ]; then  bunzip2 /tmp/rpi-arm-raspbian-8.0-1.2.0.tar.bz2 && tar xf /tmp/rpi-arm-raspbian-8.0-1.2.0.tar; cd rpi-arm-raspbian-8.0-1.2.0; cp -r * /opt/snowboy ; elif [ `uname -m` = "x86_64" ]; then bunzip2 /tmp/ubuntu1404-x86_64-1.2.0.tar.bz2 && tar xf /tmp/ubuntu1404-x86_64-1.2.0.tar;  cd ubuntu1404-x86_64-1.2.0; cp -a * /opt/snowboy fi; 
+RUN mkdir -p /opt/snowboy && mkdir /tmp/snowboy && cd /tmp/snowboy && if [ `uname -m` = "armv7l" ]; then  bunzip2 /tmp/rpi-arm-raspbian-8.0-1.2.0.tar.bz2 && tar xf /tmp/rpi-arm-raspbian-8.0-1.2.0.tar; cd rpi-arm-raspbian-8.0-1.2.0; cp -r * /opt/snowboy ; elif [ `uname -m` = "x86_64" ]; then bunzip2 /tmp/ubuntu1404-x86_64-1.2.0.tar.bz2 && tar xf /tmp/ubuntu1404-x86_64-1.2.0.tar;  cd ubuntu1404-x86_64-1.2.0; cp -a * /opt/snowboy ;fi; 
 
 COPY ./snips_hotword_snowboy/* /opt/snips_hotword_snowboy/
 COPY ./snips_hotword_snowboy/resources/* /opt/snips_hotword_snowboy/resources/
