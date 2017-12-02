@@ -78,8 +78,8 @@ services:
             - NLU_MODEL_FOLDER=/opt/rasa/data/nlu-model/default/model_20171125-071720
             - MQTT_HOST=mosquitto
             - MQTT_PORT=1883
-        #entrypoint : ["/opt/rasa/snips_rasa_nlu/rasa_nlu_server.py"]
-        entrypoint: ['/bin/bash']
+        entrypoint : ["/opt/snips_rasa_nlu/rasa_nlu_server.py"]
+        #entrypoint: ['/bin/bash']
         volumes:
             #- ../docker-images/rasa/snips_rasa_nlu:/opt/rasa/snips_rasa_nlu
             #- ./rasa_musicplayer:/opt/rasa/rasa_musicplayer

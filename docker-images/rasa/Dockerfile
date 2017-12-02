@@ -23,7 +23,7 @@ RUN if [ `uname -m` = "armv7l" ]; then  mkdir /opt/rasa  &&  export HOME=/opt/ra
 RUN /opt/rasa/anaconda/bin/conda install scikit-learn 
 RUN /opt/rasa/anaconda/bin/pip install -U sklearn-crfsuite
 
-RUN  ls
+RUN  ls /tmp
 
 # install rasa_nlu and requirementS
 RUN /opt/rasa/anaconda/bin/pip install setuptools ; echo "done" 
@@ -38,8 +38,8 @@ RUN /opt/rasa/anaconda/bin/pip install -U docker-compose ; echo "done"
 RUN /opt/rasa/anaconda/bin/pip install -U setuptools ; echo "done" 
 
 # and again to force ??
-#RUN /opt/rasa/anaconda/bin/pip install -U spacy ; echo "done" 
-#RUN /opt/rasa/anaconda/bin/python -m spacy download en ; echo "done" 
+RUN /opt/rasa/anaconda/bin/pip install -U spacy ; echo "done" 
+RUN /opt/rasa/anaconda/bin/python -m spacy download en ; echo "done" 
 
 RUN /opt/rasa/anaconda/bin/pip install -U Flask ; echo "done" 
 RUN /opt/rasa/anaconda/bin/pip install duckling
