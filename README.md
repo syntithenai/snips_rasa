@@ -32,7 +32,19 @@ It is apparently possible to install pulseaudio on MS Windows and MacOSX which s
 
 To get started 
 
+!! You will need at least 16G of storage space to install and run the suite.
+
 - [Install docker](https://www.google.com.au/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwiPkYafmt3XAhUKJZQKHU3DBO4QFggoMAA&url=https%3A%2F%2Fdocs.docker.com%2Fengine%2Finstallation%2F&usg=AOvVaw3LbZ234MXDYJLII4P-TXAZ)
+
+
+- To build rasa on a raspberry pi you will need some swap memory. DO NOT LEAVE THIS ENABLED OR YOU WILL KILL YOUR SD CARD.
+```
+dd if=/dev/zero of=/swapfile bs=1M count=1024 # For 1GB swap file
+mkswap /swapfile
+swapon /swapfile
+# when finished be sure to      swapoff /swapfile; rm /swapfile
+```
+
 
 - ```pip install docker-compose```
 - ```git clone https://github.com/syntithenai/snips_rasa.git```
@@ -41,8 +53,6 @@ To get started
 - OR where pulseaudio is running on the host without extra config
 - ```pasuspender -- docker-compose up```
 
-
-!! You will need at least 16G of storage space to install and run the suite.
 
     
 ## Snowboy
