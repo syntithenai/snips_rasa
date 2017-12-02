@@ -148,5 +148,5 @@ class RasaNLUServer():
 
 
 
-server = RasaNLUServer(os.environ['MQTT_HOST'], os.environ['MQTT_PORT'],os.environ['NLU_MODEL_FOLDER'],os.environ['NLU_CONFIG_FILE'])
+server = RasaNLUServer(os.getenv('MQTT_HOST','mosquitto'), os.getenv('MQTT_PORT','1883'),os.getenv('NLU_MODEL_FOLDER','/opt/rasa/data/nlu-model/default/model_20171125-071720'),os.getenv('NLU_CONFIG_FILE','/opt/rasa/data/nlu-model/config.json'))
 server.start()

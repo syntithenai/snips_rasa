@@ -23,6 +23,8 @@ RUN if [ `uname -m` = "armv7l" ]; then  mkdir /opt/rasa  &&  export HOME=/opt/ra
 RUN /opt/rasa/anaconda/bin/conda install scikit-learn 
 RUN /opt/rasa/anaconda/bin/pip install -U sklearn-crfsuite
 
+RUN  ls
+
 # install rasa_nlu and requirementS
 RUN /opt/rasa/anaconda/bin/pip install setuptools ; echo "done" 
 RUN /opt/rasa/anaconda/bin/pip install -U spacy ; echo "done" 
@@ -36,24 +38,29 @@ RUN /opt/rasa/anaconda/bin/pip install -U docker-compose ; echo "done"
 RUN /opt/rasa/anaconda/bin/pip install -U setuptools ; echo "done" 
 
 # and again to force ??
-RUN /opt/rasa/anaconda/bin/pip install -U spacy ; echo "done" 
-RUN /opt/rasa/anaconda/bin/python -m spacy download en ; echo "done" 
+#RUN /opt/rasa/anaconda/bin/pip install -U spacy ; echo "done" 
+#RUN /opt/rasa/anaconda/bin/python -m spacy download en ; echo "done" 
+
 RUN /opt/rasa/anaconda/bin/pip install -U Flask ; echo "done" 
 RUN /opt/rasa/anaconda/bin/pip install duckling
 
 # rasa core
-RUN /opt/rasa/anaconda/bin/pip install pypandoc
-RUN  apt-get install -y  pandoc
-RUN cd /opt/rasa && git clone https://github.com/RasaHQ/rasa_core.git 
-COPY rasa_core_requirements.txt /opt/rasa/rasa_core/requirements.txt
-RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -r requirements.txt 
-RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -e .
+#RUN /opt/rasa/anaconda/bin/pip install pypandoc
+#RUN  apt-get install -y  pandoc
+#RUN cd /opt/rasa && git clone https://github.com/RasaHQ/rasa_core.git 
+#COPY rasa_core_requirements.txt /opt/rasa/rasa_core/requirements.txt
+#RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -r requirements.txt 
+#RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -e .
 
-RUN /opt/rasa/anaconda/bin/pip install paho-mqtt
+RUN /opt/rasa/anaconda/bin/pip install paho-mqtt future typing boto3
 
 # hacked entrypoint script and ENV VAR to trigger rasa
 #COPY ./snips-entrypoint.sh /opt/snips/snips-entrypoint.sh
-COPY ./snips_rasa_nlu /opt/
+
+COPY ./snips_rasa_nlu/ /opt/snips_rasa_nlu/
+COPY ./snips_rasa_core/ /opt/snips_rasa_core/
+COPY ./rasa_musicplayer/ /opt/rasa_musicplayer/
+
 
 ENTRYPOINT ['/opt/snip_rasa_nlu/start.sh']
 #CMD ["/opt/snips/snips-entrypoint.sh"]
