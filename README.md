@@ -22,8 +22,6 @@ This repository is a collection of projects related to [Snips AI](http://snips.a
 
 The Dockerfiles build on both arm7(Raspberry Pi) and x86_64(Linux desktop/server).
 
-!! AS AT NOW arm7 is not building 
-
 
 It is apparently possible to install pulseaudio on MS Windows and MacOSX which should allow the suite to be used with Docker on other platforms than Linux.
 
@@ -52,6 +50,7 @@ swapon /swapfile
 - ```docker-compose up```
 - OR where pulseaudio is running on the host without extra config
 - ```pasuspender -- docker-compose up```
+- OR modify the environment variables and host mounts for the pulseaudio container in docker-compose.yml to use the host pulseaudio system.
 
 
     
