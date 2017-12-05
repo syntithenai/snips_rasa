@@ -173,3 +173,10 @@ With the story format, confirmations, Yes/No responses, form wizard (slot fillin
 ```
 
 
+
+
+
+# JUNK
+
+snips audio server pushes 256 samples long frames, signed 16bit, mono, 16000Hz
+each frame in its own .wav container

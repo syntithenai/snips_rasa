@@ -82,6 +82,6 @@ USER pulse
 
 #VOLUME ["/tmp/pulse", "/usr/local/etc/pulse"]
 #RUN touch /tmp/pulse/socket; chmod 777 /tmp/pulse/socket
-
-ENTRYPOINT ["pulseaudio"]
+#COPY ./start.sh start.sh
+ENTRYPOINT ["/tmp/start.sh"]
 CMD ["--log-target=stderr"]

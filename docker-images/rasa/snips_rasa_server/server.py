@@ -34,6 +34,7 @@ from rasa_core.channels.console import ConsoleInputChannel
 from rasa_core.interpreter import RasaNLUInterpreter
 from rasa_core.policies.keras_policy import KerasPolicy
 from rasa_core.policies.memoization import MemoizationPolicy
+from rasa_core.channels.direct import CollectingOutputChannel
 
 logger = logging.getLogger(__name__)
 
@@ -240,6 +241,7 @@ class SnipsRasaServer():
             print(payload)
             if 'input' in payload :        
                 sessionId = payload['sessionId']
+                siteId = payload.get('siteId','default')
                 entities=[]
                 # strip snips user id from entity name
                 intentNameParts=payload['intent']['intentName'].split('__')
@@ -258,9 +260,13 @@ class SnipsRasaServer():
                 }  
                 self.log("CORE HANDLER {}".format(json.dumps(output)))
                 message = json.dumps(output)
-                response = self.agent.handle_message(message)
+                response = self.agent.handle_message(message,output_channel = CollectingOutputChannel())
                 print ("OUT")
-                print(message)
+                print(response)
+                self.client.publish('hermes/tts/say',
+                payload=json.dumps({"sessionId": sessionId, "text": response[0], "siteId": siteId}), 
+                qos=0,
+                retain=False)
             
     def handleNluQuery(self,msg):
             self.log("NLU query {}".format(msg.topic))

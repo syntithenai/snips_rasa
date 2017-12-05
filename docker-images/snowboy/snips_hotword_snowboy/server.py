@@ -1,86 +1,59 @@
 # -*-: coding utf-8 -*-
-""" Snips core server. """
+""" Snips hotword server. """
 
 import json
 import time
 import os
 import syslog
+import sys
+import wave
+import struct
+import StringIO
 
 from socket import error as socket_error
 
 import paho.mqtt.client as mqtt
 
-from thread_handler import ThreadHandler
 
-import sys
 sys.path.append('')
 
 import snowboydecoder
-import snowboythreaded
 
-import signal
 
     
 class SnowboyHotwordServer():
     """ Snips hotword server. """
 
     def __init__(self,
-                 mqtt_hostname,
-                 mqtt_port,
-                 hotword,
-                 site
+                 mqtt_hostname='mosquitto',
+                 mqtt_port=1883,
+                 hotword_model='resources/snowboy.umdl',
+                 hotword='snowboy',
+                 site='default',
+                 listen_to='default'
                  ):
-        """ Initialisation.
-
-        :param config: a YAML configuration.
-        :param assistant: the client assistant class, holding the
-                          intent handler and intents registry.
-        """
-        self.thread_handler = ThreadHandler()
+                     
+        self.activeClientList = []
+        self.allowedClientList = listen_to.split(',')
+        self.messageCount = 0;
+        self.detection = snowboydecoder.HotwordDetector(hotword_model, sensitivity=0.9)
 
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
+        
         self.mqtt_hostname = mqtt_hostname
         self.mqtt_port = mqtt_port
         self.hotword = hotword
+        self.hotword_model = hotword_model
         self.site = site
-        self.active = True
-        # listen for hotword
-        self.model = os.environ['HOTWORD_MODEL']
-        self.detector = snowboythreaded.ThreadedDetector(self.model, sensitivity=0.5)
-        self.log('created')
-        self.detector.start()
-        self.log('started')
-        
-        # capture SIGINT signal, e.g., Ctrl+C
-        #signal.signal(signal.SIGINT, signal_handler)
-        self.interrupted = False
-        signal.signal(signal.SIGINT, self.signal_handler)
-        self.log('starting')
-        #self.detector = snowboydecoder.HotwordDetector(self.model, sensitivity=0.5)
-        #self.detector = snowboythreaded.ThreadedDetector(self.model, sensitivity=0.5)
-        #self.log('created')
-        #self.detector.start()
-        #self.log('started')
-        ##self.hotword_on()
-        
+        self.listen_to = listen_to
         
     def start(self):
-        """ Start the MQTT client. """
-        self.thread_handler.run(target=self.start_blocking)
-        self.thread_handler.start_run_loop()
-
-    def start_blocking(self, run_event):
-        """ Start the MQTT client, as a blocking method.
-
-        :param run_event: a run event object provided by the thread handler.
-        """
         self.log("Connecting to {} on port {}".format(self.mqtt_hostname, str(self.mqtt_port)))
-
         retry = 0
-        while True and run_event.is_set():
+        while True :
             try:
                 self.log("Trying to connect to {}".format(self.mqtt_hostname))
                 self.client.connect(self.mqtt_hostname, self.mqtt_port, 60)
@@ -90,152 +63,72 @@ class SnowboyHotwordServer():
                 time.sleep(5 + int(retry / 5))
                 retry = retry + 1
         
-        while run_event.is_set() and not self.interrupted:
+        while True:
             try:
                 self.client.loop()
             except AttributeError as e:
                 self.log("Error in mqtt run loop {}".format(e))
                 time.sleep(1)
 
-    # pylint: disable=unused-argument,no-self-use
     def on_connect(self, client, userdata, flags, result_code):
-        """ Callback when the MQTT client is connected.
-
-        :param client: the client being connected.
-        :param userdata: unused.
-        :param flags: unused.
-        :param result_code: result code.
-        """
         self.log("Connected with result code {}".format(result_code))
-        self.client.subscribe('#', 0)
-        time.sleep(1)
-        #self.send_message('hermes/hotword/toggleOn','')
-        
+        self.client.subscribe('hermes/hotword/toggleOff')
+        self.client.subscribe('hermes/hotword/toggleOn')
+        for allowedClient in self.allowedClientList:
+            self.client.subscribe('hermes/audioServer/{}/audioFrame'.format(allowedClient))
+            self.client.subscribe('hermes/hotword/{}/toggleOff'.format(self.hotword))
+            self.client.subscribe('hermes/hotword/{}/toggleOn'.format(self.hotword))
+        # enable to start
+        client.publish('hermes/hotword/{}/toggleOn'.format(self.hotword), payload="{\"siteId\":\"" + self.site + "\",\"sessionId\":null}", qos=0)
+            
 
-    # pylint: disable=unused-argument
     def on_disconnect(self, client, userdata, result_code):
-        """ Callback when the MQTT client is disconnected. In this case,
-            the server waits five seconds before trying to reconnected.
-
-        :param client: the client being disconnected.
-        :param userdata: unused.
-        :param result_code: result code.
-        """
         self.log("Disconnected with result code " + str(result_code))
         time.sleep(5)
-        self.thread_handler.run(target=self.start_blocking)
-
-    # pylint: disable=unused-argument
+    
     def on_message(self, client, userdata, msg):
-        """ Callback when the MQTT client received a new message.
+        if msg.topic.endswith('toggleOff'):
+            self.log('toggle off')
+            msgJSON = json.loads(msg.payload)
+            siteId = msgJSON.get('siteId','default')
+            if siteId in self.activeClientList:
+                self.activeClientList.remove(siteId)
+        elif msg.topic.endswith('toggleOn'):
+            self.log('toggle on')
+            msgJSON = json.loads(msg.payload)
+            siteId = msgJSON.get('siteId','default')
+            if siteId not in self.activeClientList:
+                self.activeClientList.append(siteId)
+            self.messageCount = 0;
+        else:
+            self.messageCount = self.messageCount + 1;
+            siteId = msg.topic.split('/')
+            if siteId[2] in self.activeClientList:
+                #if self.messageCount % 20 == 0 :
+                    #self.log('audiofrom {} {}'.format(siteId[2],len(msg.payload)))
+                ##can test the speed
+                #start = time.clock()
 
-        :param client: the MQTT client.
-        :param userdata: unused.
-        :param msg: the MQTT message.
-        """
-        #self.log('message')
-        #self.log("New message on topic {}".format(msg.topic))
-        #self.log(client)
-        #self.log(userdata)
-        #self.log(msg.payload)
-        #if msg.payload is None or len(msg.payload) == 0:
-            #pass
-        if msg.topic is not None and msg.topic.startswith("hermes/hotword/"):
-        #and msg.payload:
-            if msg.topic.endswith('toggleOff'):
-                self.log('toggle off')
-                payload = {'siteId':'default'}
-                try:
-                    payload = json.loads(msg.payload.decode('utf-8'))
-                except ValueError as e:
-                    self.log("No message content {}".format(e))
-                self.log('payload')
-                if 'siteId' in payload:
-                    self.log('siteid')
-                    if payload['siteId'] == self.site:
-                        self.log('siteid match')
-                        #self.site = payload.siteId
-                        self.hotword_off()
-                else:
-                    self.hotword_off()
-            elif msg.topic.endswith('toggleOn'):
-                self.hotword_on()
+                #this works but is SLOWER than the below code
+                #buffer = StringIO.StringIO(msg.payload)
+                #wav = wave.open(buffer, 'r')
+                #data = wav.readframes(wav.getnframes())
                 
-    def hotword_on(self):
-        self.log('hotword on')
-        self.active = True
-        #self.detector = snowboydecoder.ThreadedDetector(self.model, sensitivity=0.5)
-        # snowboydecoder.ding_callback()
-        # main loop
-        self.interrupted = False
-        #self.detector = snowboythreaded.ThreadedDetector(self.model, sensitivity=0.5)
-        #self.detector(star)
-        #self.detector.start_recog(detected_callback=self.send_detected,sleep_time=0.03)
-        #detected_callback=self.send_detected,
-               #interrupt_check=self.interrupt_callback,
-        #self.detector = snowboydecoder.HotwordDetector(self.model, sensitivity=0.5)
-        #self.detector.start(detected_callback=self.send_detected, interrupt_check=self.interrupt_callback,sleep_time=0.03)
-        self.detector.start_recog(detected_callback=self.send_detected,sleep_time=0.03)
-        self.log('hotword started')
-        
-    def hotword_off(self):
-        self.log('hotword off')
-        self.active = True
-        #self.interrupted = True;
-        #if self.detector is not None:
-        #    self.detector.pause_recog()
-        #self.detector.terminate()
-        #self.detector = None                    
-    
-    def signal_handler(self,signal=None, frame=None):
-        self.interrupted = True
-        self.active = False
-        raise Exception('Interrupted !')
+                #this is faster
+                data = msg.payload[44:struct.unpack('<L', msg.payload[4:8])[0]]
 
-
-    def send_detected(self):
-        self.log('send detected')
-        snowboydecoder.play_audio_file()
-        #topic = 'hermes/hotword/{}/detected'.format(self.hotword)
-        topic = 'hermes/hotword/{}/detected'.format(self.site)
-        payload = json.dumps({"siteId": self.site, "sessionId": None})
-        self.log(payload)
-        self.send_message(topic,payload)
-        # ?? should come from dialog service
-        #self.hotword_off()
-    
-    def interrupt_callback(self,value=None):
-        #self.log('hotword exit check')
-        return False
-        # self.active
-        #self.interrupted    
-            
-        
-    def send_message(self,topic,payload):
-        self.log('send message')
-        self.client.publish(topic,
-                    payload, 
-                    qos=0,
-                    retain=False)
+                #elapsed_time = time.clock()
+                #print (elapsed_time - start)
+                
+                ans = self.detection.detector.RunDetection(data)
+                if ans == 1:
+                    print('Hotword Detected!')
+                    client.publish('hermes/hotword/{}/detected'.format(self.hotword), payload="{\"siteId\":\"" + siteId[2] + "\",\"sessionId\":null}", qos=0)
         
         
-        #self.log('send message')
-        #self.client.publish(topic,payload,qos=0,retain=False)
-        #self.log('sent message to {}'.format(topic))
-      
+        
     def log(self, message):
         print(message)
-        file = open("/tmp/snowboylog/log","a") 
-        try:
-            file.write(message) 
-        except TypeError as e:
-            pass
-        file.write("\n")
-        file.close()
- #       syslog.syslog('Processing started')
-#       syslog.syslog(syslog.LOG_ERR,message)
-       
 
-server = SnowboyHotwordServer(os.environ['MQTT_HOST'], os.environ['MQTT_PORT'],os.environ['HOTWORD_ID'],os.environ['SITE_ID'])
-
+server = SnowboyHotwordServer()
 server.start()
