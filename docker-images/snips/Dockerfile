@@ -18,6 +18,13 @@ RUN if [ `uname -m` = "armv7l" ]; then  bash -c  'echo "deb https://raspbian.sni
 RUN apt-get update 
 RUN apt-get install -y snips-platform-voice pulseaudio jq snips-watch snips-asr-model-en-500mb
 
+# ADD NON FREE REPOS
+# raspian includes them by default
+RUN printf "deb http://deb.debian.org/debian jessie main contrib non-free" > /etc/apt/sources.list.d/non-free.list
+
+RUN apt-get update
+
+RUN apt-get -y install libttspico0 libttspico-utils libttspico-data libav-tools
 
 # startup script from docker image using supervisord
 COPY snips-entrypoint.sh /opt/snips/snips-entrypoint.sh

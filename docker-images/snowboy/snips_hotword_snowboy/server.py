@@ -19,18 +19,19 @@ sys.path.append('')
 
 import snowboydecoder
 
-
+# TODO
+# volume mute after hotword id.   -> amixer set 'Master' 10%
     
 class SnowboyHotwordServer():
     """ Snips hotword server. """
 
     def __init__(self,
-                 mqtt_hostname='mosquitto',
-                 mqtt_port=1883,
-                 hotword_model='resources/snowboy.umdl',
-                 hotword='snowboy',
-                 site='default',
-                 listen_to='default'
+                 mqtt_hostname=os.environ.get('mqtt_hostname','mosquitto'),
+                 mqtt_port=os.environ.get('mqtt_port',1883),
+                 hotword_model=os.environ.get('hotword_model','resources/snowboy.umdl'),
+                 hotword=os.environ.get('hotword','snowboy'),
+                 site=os.environ.get('site','default'),
+                 listen_to=os.environ.get('listen_to','default')
                  ):
                      
         self.activeClientList = []
@@ -79,7 +80,7 @@ class SnowboyHotwordServer():
             self.client.subscribe('hermes/hotword/{}/toggleOff'.format(self.hotword))
             self.client.subscribe('hermes/hotword/{}/toggleOn'.format(self.hotword))
         # enable to start
-        client.publish('hermes/hotword/{}/toggleOn'.format(self.hotword), payload="{\"siteId\":\"" + self.site + "\",\"sessionId\":null}", qos=0)
+        self.client.publish('hermes/hotword/{}/toggleOn'.format(self.hotword), payload="{\"siteId\":\"" + self.site + "\",\"sessionId\":null}", qos=0)
             
 
     def on_disconnect(self, client, userdata, result_code):
@@ -123,7 +124,7 @@ class SnowboyHotwordServer():
                 ans = self.detection.detector.RunDetection(data)
                 if ans == 1:
                     print('Hotword Detected!')
-                    client.publish('hermes/hotword/{}/detected'.format(self.hotword), payload="{\"siteId\":\"" + siteId[2] + "\",\"sessionId\":null}", qos=0)
+                    self.client.publish('hermes/hotword/{}/detected'.format(self.hotword), payload="{\"siteId\":\"" + siteId[2] + "\",\"sessionId\":null}", qos=0)
         
         
         

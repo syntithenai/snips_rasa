@@ -45,22 +45,35 @@ RUN /opt/rasa/anaconda/bin/pip install -U Flask ; echo "done"
 RUN /opt/rasa/anaconda/bin/pip install duckling
 
 # rasa core
-#RUN /opt/rasa/anaconda/bin/pip install pypandoc
-#RUN  apt-get install -y  pandoc
-#RUN cd /opt/rasa && git clone https://github.com/RasaHQ/rasa_core.git 
-#COPY rasa_core_requirements.txt /opt/rasa/rasa_core/requirements.txt
-#RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -r requirements.txt 
-#RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -e .
+RUN /opt/rasa/anaconda/bin/pip install pypandoc
+RUN  apt-get install -y  pandoc
+RUN cd /opt/rasa && git clone https://github.com/RasaHQ/rasa_core.git 
+COPY rasa_core_requirements.txt /opt/rasa/rasa_core/requirements.txt
+RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -r requirements.txt 
+RUN cd /opt/rasa/rasa_core && /opt/rasa/anaconda/bin/pip install -e .
 
 RUN /opt/rasa/anaconda/bin/pip install paho-mqtt future typing boto3
+
+# ADD NON FREE REPOS
+# raspian includes them by default
+RUN printf "deb http://deb.debian.org/debian jessie main contrib non-free" > /etc/apt/sources.list.d/non-free.list
+
+RUN apt-get update
+
+RUN apt-get -y install libttspico0 libttspico-utils libttspico-data libav-tools
+
+RUN apt-get -y install pulseaudio sox libsox-fmt-all mosquitto-clients portaudio19-dev  python-pyaudio
+RUN /opt/rasa/anaconda/bin/pip install pyaudio
+
+RUN cd /opt; git clone https://github.com/rabitt/pysox.git; cd pysox ; /opt/rasa/anaconda/bin/python setup.py install
 
 # hacked entrypoint script and ENV VAR to trigger rasa
 #COPY ./snips-entrypoint.sh /opt/snips/snips-entrypoint.sh
 
-COPY ./snips_rasa_nlu/ /opt/snips_rasa_nlu/
-COPY ./snips_rasa_core/ /opt/snips_rasa_core/
-COPY ./rasa_musicplayer/ /opt/rasa_musicplayer/
+COPY ./snips_rasa_server/ /opt/snips_rasa_server/
+#COPY ./snips_rasa_core/ /opt/snips_rasa_core/
+#COPY ./rasa_musicplayer/ /opt/rasa_musicplayer/
 
 
-ENTRYPOINT ['/opt/snip_rasa_nlu/start.sh']
+ENTRYPOINT ['/opt/snips_rasa_server/start.sh']
 #CMD ["/opt/snips/snips-entrypoint.sh"]

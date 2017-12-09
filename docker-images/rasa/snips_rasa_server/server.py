@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 import json
 import time
 import os
+import os.path
 
 from socket import error as socket_error
 
@@ -72,7 +73,7 @@ class SnipsMqttInterpreter(Interpreter):
         pass
     # passthrough parse from mqtt intent
     def parse(self, jsonData):
-        print('interpret snips')
+        #print('interpret snips')
         return json.loads(jsonData)
 
 
@@ -84,19 +85,19 @@ class SnipsMqttInterpreter(Interpreter):
 class SnipsRasaServer():
     
     def __init__(self,
-                 enable_nlu=True,
-                 enable_dialog=True,
-                 mqtt_hostname='mosquitto',
-                 mqtt_port=1883,
-                 nlu_model_path='models/nlu',
-                 snips_assistant_path='models/snips',
-                 snips_user_id='user_Kr5A7b4OD',
-                 #default/current',
-                 dialog_model_path='models/dialog',
-                 config_file='config/config.json',
-                 domain_file='config/domain.yml',
-                 nlu_training_file='config/nlu.md',
-                 dialog_training_file='config/stories.md',
+                 disable_nlu=os.environ.get('disable_nlu','mosquitto'),
+                 disable_core=os.environ.get('disable_core','mosquitto'),
+                 mqtt_hostname=os.environ.get('mqtt_hostname','mosquitto'),
+                 mqtt_port=os.environ.get('mqtt_port',1883),
+                 nlu_model_path=os.environ.get('nlu_model_path','models/nlu'),
+                 snips_assistant_path=os.environ.get('snips_assistant_path','models/snips'),
+                 snips_user_id=os.environ.get('snips_user_id','user_Kr5A7b4OD'),
+                 core_model_path=os.environ.get('core_model_path','models/core'),
+                 config_file=os.environ.get('config_file','config/config.json'),
+                 domain_file=os.environ.get('domain_file','config/domain.yml'),
+                 nlu_training_file=os.environ.get('nlu_training_file','config/nlu.md'),
+                 core_training_file=os.environ.get('core_training_file','config/stories.md'),
+                 lang=os.environ.get('lang','en-GB')
                  ):
         """ Initialisation.
 
@@ -104,6 +105,7 @@ class SnipsRasaServer():
         :param assistant: the client assistant class, holding the
                           intent handler and intents registry.
         """
+        
         self.thread_handler = ThreadHandler()
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
@@ -111,12 +113,13 @@ class SnipsRasaServer():
         self.client.on_message = self.on_message
         self.mqtt_hostname = mqtt_hostname
         self.mqtt_port = mqtt_port
-        self.enable_nlu = enable_nlu
-        self.enable_dialog = enable_dialog
+        self.lang = lang
         # RASA config
+        self.disable_nlu = disable_nlu
+        self.disable_core = disable_core
         self.interpreter = None
         self.nlu_model_path = nlu_model_path
-        self.dialog_model_path = dialog_model_path
+        self.core_model_path = core_model_path
         # to generate stub assistant
         self.snips_assistant_path = snips_assistant_path
         self.snips_user_id = snips_user_id
@@ -124,67 +127,134 @@ class SnipsRasaServer():
         # RASA training config
         self.domain_file = domain_file
         self.nlu_training_file = nlu_training_file
-        self.dialog_training_file = dialog_training_file
-        self.loadModels()
-        #self.train_nlu()
-        #self.train_dialog()
+        self.core_training_file = core_training_file
         
-    # RASA model generation
-    def loadModels(self):
-        # if file exists import os.path os.path.exists(file_path)
-        # create an NLU interpreter and dialog agent based on trained models
-        self.interpreter = Interpreter.load("{}/default/current".format(self.nlu_model_path), RasaNLUConfig(self.config_file))
-        #self.interpreter = RasaNLUInterpreter("models/nlu/default/current")
-        self.agent = Agent.load(self.dialog_model_path, interpreter=SnipsMqttInterpreter())
-
-        print('loaded model')
-
+        # save modified times on source files
+        self.nlu_modified=self.getNluModified()
+        self.core_modified=self.getCoreModified()
+        self.core_domain_modified=self.getCoreDomainModified()
+        self.nlu_model_modified=self.getNluModelModified()
+        self.core_model_modified=self.getCoreModelModified()
+        
+        self.loadModels(True)
+        
+    def getNluModified(self):
+        return os.path.getmtime(self.nlu_training_file)
+    def getCoreModified(self):    
+        return os.path.getmtime(self.core_training_file) 
+    def getNluModelModified(self):
+        return os.path.getmtime("{}/default/current/metadata.json".format(self.nlu_model_path))
+    def getCoreModelModified(self):
+        return os.path.getmtime("{}/domain.json".format(self.core_model_path))
+    def getCoreDomainModified(self):
+        return os.path.getmtime(self.domain_file)
+        
+    def isNluModified(self):
+        return self.getNluModified() != self.nlu_modified  or self.getNluModified() > self.getNluModelModified()
+    def isCoreModified(self):    
+        return self.getCoreModified() != self.core_modified or self.getCoreModified() > self.getCoreModelModified()  or self.getCoreDomainModified() != self.core_domain_modified or self.getCoreDomainModified() > self.getCoreModelModified()
+    def isNluModelModified(self):
+        return self.getNluModelModified() != self.nlu_model_modified
+    def isCoreModelModified(self):
+        return self.getCoreModelModified() != self.core_model_modified
+    
+    def isNluModelMissing(self):
+        return not os.path.isfile("{}/default/current/metadata.json".format(self.nlu_model_path))
+    def isCoreModelMissing(self):
+        return not os.path.isfile("{}/domain.json".format(self.core_model_path))
 
     # these function read extended rasa stories format and output something suitable for training
     def generateNLU(self):
-        pass
-    def generateDialog(self):
+        if os.path.getmtime(self.nlu_training_file) != self.nlu_modified:
+            # do generation
+            pass
+        
+    def generateCore(self):
         pass
     def generateDomain(self):
         pass
 
+    
+    def watchModels(self,run_event):
+        while True and run_event.is_set():
+            self.loadModels()
+            time.sleep(10)
+            
+    def trainModels(self,force=False):
+        self.train_nlu(force)
+        self.train_core(force)
+        
+    # RASA model generation
+    def loadModels(self,force=False):
+        self.trainModels()
+        
+        # if file exists import os.path os.path.exists(file_path)
+        # create an NLU interpreter and dialog agent based on trained models
+        if self.disable_nlu != "yes":
+            if force or self.isNluModelModified():
+                self.interpreter = Interpreter.load("{}/default/current".format(self.nlu_model_path), RasaNLUConfig(self.config_file))
+                self.nlu_model_modified=self.getNluModelModified()
+                self.nlu_modified=self.getNluModified()
+        
+                print('loaded nlu model')
+            
+        
+        #self.interpreter = RasaNLUInterpreter("models/nlu/default/current")
+        if self.disable_core != "yes":
+            if force or self.isCoreModelModified():
+                self.agent = Agent.load(self.core_model_path, interpreter=SnipsMqttInterpreter())
+                self.core_model_modified=self.getCoreModelModified()
+                self.core_modified=self.getCoreModified()
+                self.core_domain_modified=self.getCoreDomainModified()
+        
+        print('loaded core model')
+        
+        
 
     # RASA training
-    def train_dialog(self):
-        if self.enable_dialog:
-            agent = Agent(self.domain_file,
-                          policies=[MemoizationPolicy(), DefaultPolicy()])
-            agent.train(
-                    self.dialog_training_file,
-                    max_history=3,
-                    epochs=100,
-                    batch_size=50,
-                    augmentation_factor=50,
-                    validation_split=0.2
-            )
-            agent.persist(self.dialog_model_path)
-            return agent
+    def train_nlu(self,force=False):
+        if self.disable_nlu  != "yes":
+            print("TRY NLU TRAIN {} {} {}".format(force,self.isNluModified() , self.isNluModelMissing()))
+            if (force or self.isNluModified() or self.isNluModelMissing()):
+                print("NLU TRAIN {} {} {}".format(force,self.isNluModified() , self.isNluModelMissing()))
+            
+                from rasa_nlu.converters import load_data
+                from rasa_nlu.config import RasaNLUConfig
+                from rasa_nlu.model import Trainer
 
-    def train_nlu(self):
-        if self.enable_nlu:
-            from rasa_nlu.converters import load_data
-            from rasa_nlu.config import RasaNLUConfig
-            from rasa_nlu.model import Trainer
+                training_data = load_data(self.nlu_training_file)
+                trainer = Trainer(RasaNLUConfig(self.config_file))
+                trainer.train(training_data)
+                #model_directory = trainer.persist('models/nlu/', fixed_model_name="current")
+                model_directory = trainer.persist(self.nlu_model_path, fixed_model_name="current")
+                #self.core_model_modified=self.getCoreModelModified()
+                return model_directory
 
-            training_data = load_data(self.nlu_training_file)
-            trainer = Trainer(RasaNLUConfig(self.config_file))
-            trainer.train(training_data)
-            #model_directory = trainer.persist('models/nlu/', fixed_model_name="current")
-            model_directory = trainer.persist(self.nlu_model_path, fixed_model_name="current")
-            return model_directory
-
-
+    def train_core(self,force=False):
+        if self.disable_core != "yes":
+            print("TRY CORE TRAIN {} {} {} ".format(force,self.isCoreModified()   , self.isCoreModelMissing()))
+            if force or self.isCoreModified()  or self.isCoreModelMissing():
+                print("CORE TRAIN {} {} {} ".format(force,self.isCoreModified()   , self.isCoreModelMissing()))
+            
+                agent = Agent(self.domain_file,
+                              policies=[MemoizationPolicy(), DefaultPolicy()])
+                agent.train(
+                        self.core_training_file,
+                        max_history=3,
+                        epochs=100,
+                        batch_size=50,
+                        augmentation_factor=50,
+                        validation_split=0.2
+                )
+                agent.persist(self.core_model_path)
+                return agent
 
 
 
     # MQTT LISTENING SERVER
     def start(self):
         self.thread_handler.run(target=self.start_blocking)
+        self.thread_handler.run(target=self.watchModels)
         self.thread_handler.start_run_loop()
 
     def start_blocking(self, run_event):
@@ -221,9 +291,9 @@ class SnipsRasaServer():
             pass
         else:
             print("MESSAGE: {}".format(msg.topic))
-            if msg.topic is not None and "{}".format(msg.topic).startswith("hermes/nlu") and "{}".format(msg.topic).endswith('/query') and msg.payload:
+            if msg.topic is not None and "{}".format(msg.topic).startswith("hermes/nlu") and "{}".format(msg.topic).endswith('/query') and msg.payload and self.disable_nlu != "yes":
                 self.handleNluQuery(msg)
-            elif msg.topic is not None and "{}".format(msg.topic).startswith("hermes/intent") and msg.payload:
+            elif msg.topic is not None and "{}".format(msg.topic).startswith("hermes/intent") and msg.payload and  self.disable_core != "yes":
                 self.handleDialogQuery(msg)
             elif msg.topic is not None and "{}".format(msg.topic).startswith("rasa/train"):
                 self.handleTraining(msg)
@@ -235,17 +305,18 @@ class SnipsRasaServer():
             if 'input' in payload :        
                 sessionId = payload['sessionId']                
     
-    def handleDialogQuery(self,msg):
-            self.log("Dialog query {}".format(msg.topic))
+    def handleCoreQuery(self,msg):
+            self.log("Core query {}".format(msg.topic))
             payload = json.loads(msg.payload.decode('utf-8'))
             print(payload)
             if 'input' in payload :        
-                sessionId = payload['sessionId']
+                theId = payload.get('id')
+                sessionId = payload.get('sessionId')
                 siteId = payload.get('siteId','default')
                 entities=[]
                 # strip snips user id from entity name
-                intentNameParts=payload['intent']['intentName'].split('__')
-                intentNameParts=intentNameParts[1:]
+                intentNameParts = payload['intent']['intentName'].split('__')
+                intentNameParts = intentNameParts[1:]
                 intentName = '__'.join(intentNameParts)
                 if 'slots' in payload:
                     for entity in payload['slots']:
@@ -264,9 +335,10 @@ class SnipsRasaServer():
                 print ("OUT")
                 print(response)
                 self.client.publish('hermes/tts/say',
-                payload=json.dumps({"sessionId": sessionId, "text": response[0], "siteId": siteId}), 
+                payload = json.dumps({"lang":self.lang,"sessionId": sessionId, "text": response[0], "siteId": siteId,"id":theId}), 
                 qos=0,
                 retain=False)
+
             
     def handleNluQuery(self,msg):
             self.log("NLU query {}".format(msg.topic))

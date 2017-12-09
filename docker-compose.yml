@@ -11,6 +11,7 @@ services:
         #environment: ['PULSE_SERVER=192.168.1.100']
         entrypoint: ['pulseaudio']
         volumes: 
+            # pulseaudio access via shared socket
             - ./pulse:/tmp/pulse
             # proxy for host pulseaudio server auth cookie
             #- /home/stever/.config/pulse/cookie:/tmp/cookie
@@ -22,11 +23,27 @@ services:
             - 1883:1883
             # websockets enabled (for browser clients)
             - 9001:9001 
-        volumes:
-            - ./data/mosquitto/data:/mqtt/data
-            - ./data/mosquitto/logs:/mqtt/logs
+        #volumes:
+            #- ./data/mosquitto/data:/mqtt/data
+            #- ./data/mosquitto/logs:/mqtt/logs
         #restart: always
 
+    audioserver:
+        depends_on: ['mosquitto']
+        image: syntithenai/rasa
+        build: ./docker-images/rasa
+        working_dir: /opt/snips_audioserver
+        entrypoint : ["/opt/snips_audioserver/start.sh"]
+        #entrypoint: ['/bin/sleep','360000']
+        volumes:
+            # HOST MOUNT FOR DEVELOPMENT
+            - ./docker-images/rasa/snips_audioserver:/opt/snips_audioserver
+            - ./docker-images/rasa/snips_rasa_server:/opt/snips_rasa_server
+            # pulseaudio access via shared socket
+            - ./pulse:/tmp/pulse
+            - ./docker-compose/pulse-client.conf:/etc/pulse/client.conf
+            - ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
+       
     snowboy:
         depends_on: ['mosquitto','pulseaudio']
         #    devices: ['/dev/snd']
@@ -36,18 +53,16 @@ services:
         #entrypoint: ['/bin/sleep','3600']
         entrypoint: ['/opt/snips_hotword_snowboy/start.sh']
         volumes:
-            #- /tmp/snowboylog:/tmp/snowboylog
             # pulseaudio access via shared socket
             - ./pulse:/tmp/pulse
             - ./docker-compose/pulse-client.conf:/etc/pulse/client.conf
+            - ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
             #- ./docker-images/snowboy/snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
             # dev mode
             - ./docker-images/snowboy/snips_hotword_snowboy:/opt/snips_hotword_snowboy
-            - ./snips_hotword_snowboy/asound-pulse.conf:/etc/asound.conf
+            
             
         environment:
-            # pulseaudio access via shared socket
-            #- PULSE_SERVER=unix:/tmp/pulse/socket
             - MQTT_HOST=mosquitto
             - MQTT_PORT=1883
             - HOTWORD_MODEL=/opt/snips_hotword_snowboy/resources/snowboy.umdl
@@ -55,16 +70,29 @@ services:
             - LISTEN_TO=default
             - HOTWORD_ID=snowboy
             
+    tts:
+        depends_on: ['mosquitto','pulseaudio']
+        image: syntithenai/rasa
+        build: ./docker-images/rasa
+        working_dir: /opt/snips_tts
+        entrypoint: ['/opt/snips_tts/start.sh']
+        #entrypoint: ['/bin/sleep','360000']
+        volumes:
+            - ./docker-images/rasa/snips_tts:/opt/snips_tts
+            - ./pulse:/tmp/pulse
+            - ./docker-compose/pulse-client.conf:/etc/pulse/client.conf
+   
     snips:
-        depends_on: ['mosquitto','pulseaudio','rasa']
-        #
+        depends_on: ['mosquitto','pulseaudio']
+        #'rasa'
         devices: ['/dev/snd']
         image: syntithenai/snips
         build: ./docker-images/snips
-        command: --exclude-components snips-hotword --exclude-components  snips-queries -mqqt mosquitto:1883
+        # 
+        command: --exclude-components snips-audio-server --exclude-components snips-analytics --exclude-components snips-tts  --exclude-components snips-hotword --exclude-components  snips-queries  -mqqt mosquitto:1883
         volumes:
             # generic model is built into image, override with other models here
-            #- /home/stever/projects/snips-asr-model-en-500MB/snips-asr-model-en-500MB:/usr/share/snips/assistant/custom_asr
+            # -/home/stever/projects/snips-asr-model-en-500MB/snips-asr-model-en-500MB:/usr/share/snips/assistant/custom_asr
             # snips config
             - ./docker-compose/snips/config/assistant:/usr/share/snips/assistant
             - ./docker-compose/snips/snips.toml:/etc/snips.toml
@@ -83,11 +111,19 @@ services:
         build: ./docker-images/rasa
         working_dir: /opt/snips_rasa_server
         #environment:
-            #- NLU_TRAINING_FILE=/opt/rasa/data/nlu-model/stories.md
-            #- NLU_CONFIG_FILE=/opt/rasa/data/nlu-model/config.json
-            #- NLU_MODEL_FOLDER=/opt/rasa/data/nlu-model/default/model_20171125-071720
-            #- MQTT_HOST=mosquitto
-            #- MQTT_PORT=1883
+            #- disable_nlu=no|yes
+            #- disable_core=no|yes
+            #- mqtt_hostname=mosquitto
+            #- mqtt_port=1883
+            #- nlu_model_path=models/nlu
+            #- snips_assistant_path=models/snips
+            #- snips_user_id=user_Kr5A7b4OD
+            #- core_model_path=models/dialog
+            #- config_file=config/config.json
+            #- domain_file=config/domain.yml
+            #- nlu_training_file=config/nlu.md
+            #- core_training_file=config/stories.md
+            #- lang=en-GB
         #entrypoint : ["/opt/snips_rasa_server/start.sh"]
         entrypoint: ['/bin/sleep','360000']
         volumes:
